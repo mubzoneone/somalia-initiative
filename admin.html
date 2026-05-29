@@ -1,0 +1,2489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/png" href="icon-logo.png">
+  <link rel="apple-touch-icon" href="icon-logo.png">
+  <title>Admin — Somalia Initiative Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700;9..40,800&display=swap" rel="stylesheet">
+  <style>
+/* ── TOKENS ─────────────────────────────────────────────────────────────── */
+:root {
+  --bg:           #f0f2f5;
+  --surface:      #ffffff;
+  --surface-hover:#fafbfc;
+  --accent:       #2f72b8;
+  --accent-dark:  #245a95;
+  --accent-sub:   rgba(47,114,184,0.10);
+  --border:       #e2e6ec;
+  --border-strong:#c8cdd6;
+  --text:         #0d1117;
+  --muted:        #6b7685;
+  --danger:       #d93025;
+  --danger-sub:   rgba(217,48,37,0.08);
+  --danger-hover: #b5271f;
+  --success:      #1a8a4a;
+  --success-sub:  rgba(26,138,74,0.08);
+  --black:        #0d1117;
+  --white:        #ffffff;
+  --on-accent:    #ffffff;
+  --overlay:      rgba(13,17,23,0.55);
+  --radius:       6px;
+  --radius-lg:    10px;
+  --radius-pill:  9999px;
+  --font:         "DM Sans", system-ui, -apple-system, sans-serif;
+  --header-h:     56px;
+  --max-w:        440px;
+  --shadow-sm:    0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md:    0 4px 12px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06);
+  --shadow-lg:    0 12px 40px rgba(0,0,0,0.18);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:           #000000;
+    --surface:      #1C1C1E;
+    --surface-hover:#2C2C2E;
+    --accent:       #4090D8;
+    --accent-dark:  #2f72b8;
+    --accent-sub:   rgba(64,144,216,0.22);
+    --border:       #38383A;
+    --border-strong:#48484A;
+    --text:         #FFFFFF;
+    --muted:        #8E8E93;
+    --danger:       #FF453A;
+    --danger-sub:   rgba(255, 69, 58, 0.20);
+    --danger-hover: #FF6961;
+    --success:      #32D74B;
+    --success-sub:  rgba(50, 215, 75, 0.20);
+    --overlay:      rgba(0,0,0,0.5);
+    --shadow-sm:    none;
+    --shadow-md:    none;
+    --shadow-lg:    none;
+  }
+
+  .header {
+    background: var(--bg);
+    box-shadow: none;
+  }
+
+  .card,
+  .stat-card,
+  .reserves-card,
+  .month-summary,
+  .month-select__face {
+    box-shadow: none;
+  }
+
+  .month-select__chevron {
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 7L11 1' stroke='%238E8E93' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+
+  .field__select {
+    background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 7L11 1' stroke='%238E8E93' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html {
+  -webkit-text-size-adjust: 100%;
+  color-scheme: light dark;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--text);
+  background: var(--bg);
+}
+
+/* ── SHELL ───────────────────────────────────────────────────────────────── */
+.shell {
+  max-width: var(--max-w);
+  height: 100dvh;
+  margin: 0 auto;
+  display: grid;
+  grid-template-rows: var(--header-h) 1fr;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+/* ── HEADER ──────────────────────────────────────────────────────────────── */
+.header {
+  height: var(--header-h);
+  background: var(--surface);
+  border-bottom: 1.5px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0 1rem;
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.header__nav {
+  flex-shrink: 0;
+}
+
+.header__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.header__spacer {
+  flex: 1;
+  min-width: 0;
+}
+
+.header__nav .row-menu__dropdown {
+  left: 0;
+  right: auto;
+  min-width: 160px;
+  z-index: 200;
+}
+
+.header__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.header__actions[hidden] { display: none !important; }
+
+/* ── MAIN SCROLL ─────────────────────────────────────────────────────────── */
+.main {
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel {
+  padding: 1rem 0.75rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.panel.hidden { display: none; }
+
+/* ── CARDS / SECTIONS ────────────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 0.85rem;
+  border-bottom: 1.5px solid var(--border);
+  background: var(--surface);
+}
+
+.section-head__title {
+  flex: 1;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 0;
+}
+
+.section-head__add {
+  margin-left: auto;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0.4rem;
+  border-radius: var(--radius);
+  transition: background .12s;
+}
+
+.section-head__add:hover {
+  background: var(--accent-sub);
+}
+
+.section-head__manage {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.manage-roster-note {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin: 0 0 0.75rem;
+  line-height: 1.45;
+}
+
+.manage-roster-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  max-height: 50vh;
+  overflow-y: auto;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.manage-roster-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.manage-roster-row:last-child { border-bottom: none; }
+.manage-roster-row:hover { background: var(--surface-hover); }
+
+.manage-roster-row input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+
+.section-note {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.85rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+  background: var(--surface-hover);
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── LIST ROWS ───────────────────────────────────────────────────────────── */
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 0.85rem;
+  border-bottom: 1px solid var(--border);
+  transition: background .1s;
+}
+
+.list-row:last-child { border-bottom: none; }
+.list-row:hover { background: var(--surface-hover); }
+.list-row--selectable { cursor: pointer; }
+
+.list-row__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.list-row--nav .list-row__body {
+  justify-content: space-between;
+}
+
+.list-row__chevron {
+  flex-shrink: 0;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+}
+
+.list-row__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-start;
+}
+
+.list-row__name {
+  width: 100%;
+  font-size: 0.9rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.status-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.12rem 0.45rem;
+  border-radius: var(--radius-pill);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.status-badge--success {
+  background: var(--success-sub);
+  color: var(--success);
+}
+
+.status-badge--danger {
+  background: var(--danger-sub);
+  color: var(--danger);
+}
+
+.list-row__amount {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+  min-width: 52px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.list-row__actions {
+  display: flex;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.icon-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-sub); }
+
+.icon-btn.section-head__manage--active,
+.icon-btn.section-head__manage--active:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-sub);
+}
+
+/* ── ROW KEBAB MENU ──────────────────────────────────────────────────────── */
+.kebab-btn {
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  box-shadow: none;
+}
+.kebab-btn:hover {
+  border-color: var(--accent);
+  background: var(--accent-sub);
+  color: var(--accent);
+}
+.kebab-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-sub);
+}
+
+.row-menu {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.row-menu__dropdown {
+  display: none;
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 4px);
+  min-width: 120px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  z-index: 20;
+  overflow: hidden;
+}
+
+.row-menu.is-open .row-menu__dropdown { display: block; }
+
+.row-menu--drop-down .row-menu__dropdown {
+  top: calc(100% + 4px);
+  bottom: auto;
+}
+
+.header__actions .row-menu__dropdown {
+  z-index: 200;
+}
+
+.row-menu__item {
+  display: block;
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  font-family: var(--font);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: left;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background .12s;
+}
+.row-menu__item:hover { background: var(--bg); }
+.row-menu__item + .row-menu__item { border-top: 1px solid var(--border); }
+.row-menu__item--danger { color: var(--danger); }
+.row-menu__item--danger:hover { background: var(--danger-sub); }
+.row-menu__item--active {
+  color: var(--accent);
+  background: var(--accent-sub);
+}
+.row-menu__item--link {
+  text-decoration: none;
+  display: block;
+}
+
+.card--menu-overflow { overflow: visible; }
+
+.empty-row {
+  padding: 1rem 0.85rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-style: italic;
+  text-align: center;
+}
+
+/* ── ADD ROW (inline add form inside a card) ─────────────────────────────── */
+.add-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  border-top: 1.5px solid var(--border);
+  background: var(--surface-hover);
+}
+
+.add-row__btn {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--font);
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.3rem 0.25rem;
+  border-radius: var(--radius);
+  transition: background .12s;
+}
+.add-row__btn:hover { background: var(--accent-sub); }
+
+/* ── STAT CARDS ──────────────────────────────────────────────────────────── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+}
+
+.stat-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 0.75rem 0.85rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.stat-card__label {
+  margin: 0 0 0.2rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.stat-card__value {
+  margin: 0;
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--text);
+}
+
+.stat-card--accent { background: var(--accent); border-color: var(--accent-dark); }
+.stat-card--accent .stat-card__label { color: rgba(255,255,255,0.75); }
+.stat-card--accent .stat-card__value { color: var(--on-accent); }
+
+/* ── RESERVES CARD ───────────────────────────────────────────────────────── */
+.reserves-card {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 0.85rem;
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.reserves-card__body { flex: 1; }
+
+.reserves-card__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 0 0 0.2rem;
+}
+
+.reserves-card__value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--text);
+  line-height: 1;
+}
+
+/* ── MONTH CONTROLS ──────────────────────────────────────────────────────── */
+.month-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin: 0;
+}
+
+.month-select-wrap {
+  position: relative;
+  flex: 1;
+}
+
+.month-select {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.month-select:focus-visible + .month-select__face {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.month-select__face {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  height: 40px;
+  padding: 0 0.75rem;
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  pointer-events: none;
+}
+
+.month-select__label {
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+
+.month-select__chevron {
+  flex-shrink: 0;
+  width: 12px;
+  height: 8px;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 7L11 1' stroke='%236b7685' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+}
+
+/* ── MONTH SUMMARY ───────────────────────────────────────────────────────── */
+.month-summary {
+  display: grid;
+  grid-template-columns: 1fr;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1.5px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.month-summary__cell {
+  background: var(--surface);
+  padding: 0.65rem 0.5rem;
+  text-align: center;
+  border-right: none;
+}
+
+.month-summary__label {
+  display: block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin-bottom: 0.2rem;
+}
+
+.month-summary__val {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  line-height: 1;
+}
+
+/* ── BUTTONS ─────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  font-family: var(--font);
+  font-weight: 700;
+  font-size: 0.9rem;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  padding: 0.55rem 1rem;
+  transition: background .15s, transform .1s;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(0.97); }
+
+.btn--primary   { background: var(--accent); color: var(--on-accent); }
+.btn--primary:hover { background: var(--accent-dark); }
+
+.btn--outline   { background: transparent; color: var(--accent); border: 1.5px solid var(--accent); }
+.btn--outline:hover { background: var(--accent-sub); }
+
+.btn--danger    { background: var(--danger); color: var(--on-accent); }
+.btn--danger:hover { background: var(--danger-hover); }
+
+.btn--ghost     { background: transparent; color: var(--muted); border: 1.5px solid var(--border); }
+.btn--ghost:hover { background: var(--bg); }
+
+.btn--sm { font-size: 0.8rem; padding: 0.4rem 0.7rem; }
+.btn--pill { border-radius: var(--radius-pill); }
+
+/* ── MODAL ───────────────────────────────────────────────────────────────── */
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s;
+}
+
+.overlay--open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal {
+  width: 100%;
+  max-width: var(--max-w);
+  background: var(--surface);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(100%);
+  transition: transform .3s cubic-bezier(0.22,1,0.36,1);
+  max-height: 90dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.overlay--open .modal {
+  transform: translateY(0);
+}
+
+.modal__handle {
+  width: 36px;
+  height: 4px;
+  background: var(--border-strong);
+  border-radius: 2px;
+  margin: 0.65rem auto 0;
+  flex-shrink: 0;
+}
+
+.modal__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem 0.65rem;
+  border-bottom: 1.5px solid var(--border);
+  flex-shrink: 0;
+}
+
+.modal__title {
+  flex: 1;
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.modal__close {
+  width: 30px;
+  height: 30px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 1.1rem;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  transition: all .15s;
+}
+.modal__close:hover { border-color: var(--danger); color: var(--danger); }
+
+.modal__body {
+  padding: 1rem;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.modal__footer {
+  padding: 0.75rem 1rem;
+  display: flex;
+  gap: 0.5rem;
+  border-top: 1.5px solid var(--border);
+  flex-shrink: 0;
+}
+
+.modal__footer .btn { flex: 1; }
+
+.modal__footer--with-delete {
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal__footer--with-delete #btn-delete {
+  flex: 0 0 auto;
+}
+
+.modal__footer--with-delete .modal__footer-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex: 1;
+  justify-content: flex-end;
+}
+
+.modal__footer--with-delete .modal__footer-actions .btn {
+  flex: 0 1 auto;
+  min-width: 4.5rem;
+}
+
+/* ── FORM ────────────────────────────────────────────────────────────────── */
+.field { display: flex; flex-direction: column; gap: 0.3rem; }
+
+.field__label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.field__input,
+.field__select {
+  width: 100%;
+  height: 44px;
+  padding: 0 0.85rem;
+  font-family: var(--font);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  appearance: none;
+  transition: border-color .15s;
+}
+
+.field__input:focus,
+.field__select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-sub);
+}
+
+.field__select {
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 7L11 1' stroke='%236b7685' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.85rem center;
+  padding-right: 2.5rem;
+  cursor: pointer;
+}
+
+.field__prefix-wrap {
+  position: relative;
+}
+
+.field__prefix {
+  position: absolute;
+  left: 0.85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: 700;
+  color: var(--muted);
+  pointer-events: none;
+  font-size: 1rem;
+}
+
+.field__input--prefixed { padding-left: 1.75rem; }
+
+.field__display-name {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+/* ── PILL PICKER ───────────────────────────────────────────────────────── */
+.pill-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.pill-option {
+  position: relative;
+  cursor: pointer;
+}
+
+.pill-option input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.pill-option__text {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text);
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-pill);
+  transition: border-color .15s, background .15s, color .15s;
+  user-select: none;
+}
+
+.pill-option input:focus-visible + .pill-option__text {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-sub);
+}
+
+.pill-option input:checked + .pill-option__text {
+  border-color: var(--accent);
+  background: var(--accent-sub);
+  color: var(--accent-dark);
+}
+
+.pill-group--empty {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+/* ── MISC ────────────────────────────────────────────────────────────────── */
+.hidden { display: none !important; }
+
+.page-label {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  padding: 0 0.1rem;
+  margin: 0;
+}
+
+.inline-edit-wrap {
+  display: flex;
+  gap: 0.4rem;
+  align-items: center;
+  padding: 0.5rem 0.85rem;
+  border-top: 1.5px solid var(--border);
+  background: var(--surface-hover);
+}
+
+.inline-edit-wrap .field__input { height: 36px; font-size: 0.85rem; }
+
+.load-state {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.load-state--error {
+  color: #b42318;
+  line-height: 1.5;
+}
+
+.header__save-status {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.header__save-status--error { color: #b42318; }
+
+/* ── PASSCODE SCREEN ──────────────────────────────────────────────────────── */
+.passcode-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+@media (prefers-color-scheme: dark) {
+  .passcode-screen { background: #1a3a5c; }
+}
+
+.passcode-screen.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(1.05);
+}
+
+.passcode-wrap {
+  width: 100%;
+  max-width: 300px;
+  padding: 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.75rem;
+}
+
+.passcode-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.passcode-brand__star {
+  width: 52px;
+  height: 52px;
+  filter: drop-shadow(0 2px 10px rgba(0,0,0,0.28));
+}
+
+.passcode-brand__label {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: rgba(255,255,255,0.8);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.passcode-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.passcode-dots {
+  display: flex;
+  gap: 1.1rem;
+}
+
+.passcode-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(255,255,255,0.55);
+  background: transparent;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.passcode-dot.is-filled {
+  background: #fff;
+  border-color: #fff;
+  transform: scale(1.1);
+}
+
+.passcode-dot.is-error {
+  background: #ff7b74;
+  border-color: #ff7b74;
+}
+
+.passcode-hint {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: 0.04em;
+  min-height: 1.1em;
+  transition: color 0.2s;
+}
+
+.passcode-hint.is-error {
+  color: #ffb8b4;
+}
+
+.passcode-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.65rem;
+  width: 100%;
+}
+
+.passcode-key {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  font-family: var(--font);
+  font-size: clamp(1.2rem, 5vw, 1.55rem);
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s, transform 0.08s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.passcode-key:hover  { background: rgba(255,255,255,0.24); }
+.passcode-key:active { transform: scale(0.91); background: rgba(255,255,255,0.35); }
+
+.passcode-key--empty {
+  background: transparent !important;
+  pointer-events: none;
+  cursor: default;
+  transform: none !important;
+}
+
+.passcode-key--backspace {
+  background: rgba(255,255,255,0.10);
+  color: rgba(255,255,255,0.8);
+}
+
+@keyframes passcodeShake {
+  0%,100% { transform: translateX(0); }
+  14%     { transform: translateX(-9px); }
+  28%     { transform: translateX(8px); }
+  42%     { transform: translateX(-6px); }
+  57%     { transform: translateX(5px); }
+  71%     { transform: translateX(-3px); }
+  85%     { transform: translateX(2px); }
+}
+
+.passcode-dots.is-shaking {
+  animation: passcodeShake 0.52s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+  </style>
+</head>
+<body>
+<!-- PASSCODE SCREEN -->
+<div id="passcode-screen" class="passcode-screen" role="dialog" aria-modal="true" aria-label="Admin authentication">
+  <div class="passcode-wrap">
+
+    <div class="passcode-brand">
+      <svg class="passcode-brand__star" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M32 4L38.5 24.5H60L42.75 37.5L49.25 58L32 45L14.75 58L21.25 37.5L4 24.5H25.5L32 4Z" fill="white"/>
+      </svg>
+      <p class="passcode-brand__label">Admin</p>
+    </div>
+
+    <div class="passcode-indicator">
+      <div class="passcode-dots" id="passcode-dots" aria-hidden="true">
+        <span class="passcode-dot"></span>
+        <span class="passcode-dot"></span>
+        <span class="passcode-dot"></span>
+        <span class="passcode-dot"></span>
+      </div>
+      <p class="passcode-hint" id="passcode-hint">Enter passcode</p>
+    </div>
+
+    <div class="passcode-keypad" id="passcode-keypad" role="group" aria-label="Numeric keypad">
+      <button type="button" class="passcode-key" data-digit="1" aria-label="1">1</button>
+      <button type="button" class="passcode-key" data-digit="2" aria-label="2">2</button>
+      <button type="button" class="passcode-key" data-digit="3" aria-label="3">3</button>
+      <button type="button" class="passcode-key" data-digit="4" aria-label="4">4</button>
+      <button type="button" class="passcode-key" data-digit="5" aria-label="5">5</button>
+      <button type="button" class="passcode-key" data-digit="6" aria-label="6">6</button>
+      <button type="button" class="passcode-key" data-digit="7" aria-label="7">7</button>
+      <button type="button" class="passcode-key" data-digit="8" aria-label="8">8</button>
+      <button type="button" class="passcode-key" data-digit="9" aria-label="9">9</button>
+      <div  class="passcode-key passcode-key--empty" aria-hidden="true"></div>
+      <button type="button" class="passcode-key" data-digit="0" aria-label="0">0</button>
+      <button type="button" class="passcode-key passcode-key--backspace" id="passcode-back" aria-label="Delete last digit">
+        <svg width="22" height="16" viewBox="0 0 22 16" fill="none" aria-hidden="true">
+          <path d="M8.5 1.5H20a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H8.5L1.5 8l7-6.5Z" stroke="currentColor" stroke-width="1.65"/>
+          <path d="M14 5.5 9.5 10.5M9.5 5.5 14 10.5" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<div class="shell">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header__nav row-menu row-menu--drop-down" id="header-nav">
+      <button type="button" class="icon-btn" id="header-nav-btn" aria-label="Open menu" aria-haspopup="true" aria-expanded="false" onclick="toggleHeaderNav(this, event)">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M2.5 4.5h13M2.5 9h13M2.5 13.5h13" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+      </button>
+      <div class="row-menu__dropdown" role="menu">
+        <button type="button" class="row-menu__item row-menu__item--active" role="menuitem" data-panel="months" onclick="selectNavPanel('months')">Reports</button>
+        <button type="button" class="row-menu__item" role="menuitem" data-panel="overview" onclick="selectNavPanel('overview')">Overview</button>
+        <button type="button" class="row-menu__item" role="menuitem" data-panel="people" onclick="selectNavPanel('people')">People</button>
+        <a href="index.html" class="row-menu__item row-menu__item--link" role="menuitem" onclick="closeRowMenus()">Public</a>
+      </div>
+    </div>
+    <h1 class="header__title" id="header-page-title">Reports</h1>
+    <span class="header__save-status" id="save-status" hidden aria-live="polite"></span>
+    <div class="header__spacer" aria-hidden="true"></div>
+    <div class="header__actions" id="header-month-actions">
+      <div id="month-head-menu"></div>
+      <button class="btn btn--primary btn--sm btn--pill" id="btn-new-month">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        New
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="main" id="main">
+
+    <!-- OVERVIEW PANEL -->
+    <div class="panel hidden" id="panel-overview">
+
+      <div class="reserves-card">
+        <div class="reserves-card__body">
+          <p class="reserves-card__label">Current Reserves</p>
+          <p class="reserves-card__value" id="reserves-display">—</p>
+        </div>
+        <button class="btn btn--outline btn--sm" id="btn-edit-reserves">Edit</button>
+      </div>
+
+      <div class="stats-grid" id="overview-stats"></div>
+
+    </div>
+
+    <!-- PEOPLE PANEL -->
+    <div class="panel hidden" id="panel-people">
+
+      <div class="card card--menu-overflow" id="donors-card">
+        <div class="section-head">
+          <h2 class="section-head__title" id="donors-title">Donors</h2>
+          <button type="button" class="section-head__add" id="btn-add-donor" aria-label="Add donor">+ Add</button>
+        </div>
+        <div class="section-note">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M8 7v4M8 5.5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Donor names are only visible here in admin
+        </div>
+        <div id="donors-list"></div>
+      </div>
+
+      <div class="card card--menu-overflow" id="recipients-card">
+        <div class="section-head">
+          <h2 class="section-head__title" id="recipients-title">Recipients</h2>
+          <button type="button" class="section-head__add" id="btn-add-recipient" aria-label="Add recipient">+ Add</button>
+        </div>
+        <div id="recipients-list"></div>
+      </div>
+
+    </div>
+
+    <!-- MONTHS PANEL -->
+    <div class="panel" id="panel-months">
+
+      <div class="month-controls">
+        <div class="month-select-wrap">
+          <select class="month-select" id="month-select" aria-label="Select report"></select>
+          <div class="month-select__face" aria-hidden="true">
+            <span class="month-select__label" id="month-select-label">—</span>
+            <span class="month-select__chevron"></span>
+          </div>
+        </div>
+      </div>
+
+      <div id="month-detail"></div>
+
+    </div>
+
+  </main>
+
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div class="modal" id="modal">
+    <div class="modal__handle"></div>
+    <div class="modal__header">
+      <h2 class="modal__title" id="modal-title">Title</h2>
+      <button class="modal__close" id="modal-close" aria-label="Close">✕</button>
+    </div>
+    <div class="modal__body" id="modal-body"></div>
+    <div class="modal__footer" id="modal-footer"></div>
+  </div>
+</div>
+
+<script src="data-store.js"></script>
+<script>
+// ── PASSCODE GATE ─────────────────────────────────────────────────────────────
+(function () {
+  'use strict';
+
+  const SESSION_KEY = 'si_admin_auth';
+
+  const screen        = document.getElementById('passcode-screen');
+  const dotsContainer = document.getElementById('passcode-dots');
+  const hint          = document.getElementById('passcode-hint');
+  const keypad        = document.getElementById('passcode-keypad');
+  const dots          = Array.from(dotsContainer.querySelectorAll('.passcode-dot'));
+
+  let input  = [];
+  let locked = false;
+
+  function notifyReady() {
+    window.dispatchEvent(new Event('si-admin-ready'));
+  }
+
+  function updateDots() {
+    dots.forEach(function (dot, i) {
+      dot.classList.toggle('is-filled', i < input.length);
+      dot.classList.remove('is-error');
+    });
+  }
+
+  function shake() {
+    locked = true;
+    dots.forEach(function (d) { d.classList.remove('is-filled'); d.classList.add('is-error'); });
+    hint.textContent = 'Incorrect passcode';
+    hint.classList.add('is-error');
+    dotsContainer.classList.remove('is-shaking');
+    void dotsContainer.offsetWidth;
+    dotsContainer.classList.add('is-shaking');
+    setTimeout(function () {
+      input = [];
+      updateDots();
+      hint.textContent = 'Enter passcode';
+      hint.classList.remove('is-error');
+      dotsContainer.classList.remove('is-shaking');
+      locked = false;
+    }, 900);
+  }
+
+  function unlock() {
+    sessionStorage.setItem(SESSION_KEY, '1');
+    screen.classList.add('is-hidden');
+    setTimeout(function () {
+      screen.remove();
+      notifyReady();
+    }, 380);
+  }
+
+  function verifyPasscode(code) {
+    return fetch('/api/auth', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ passcode: code }),
+      credentials: 'include',
+    }).then(function (res) { return res.ok; });
+  }
+
+  function pressDigit(d) {
+    if (locked || input.length >= 4) return;
+    input.push(d);
+    updateDots();
+    if (input.length === 4) {
+      locked = true;
+      setTimeout(function () {
+        verifyPasscode(input.join(''))
+          .then(function (ok) {
+            if (ok) { unlock(); }
+            else { locked = false; shake(); }
+          })
+          .catch(function () {
+            locked = false;
+            shake();
+          });
+      }, 110);
+    }
+  }
+
+  function pressBackspace() {
+    if (locked || input.length === 0) return;
+    input.pop();
+    updateDots();
+  }
+
+  function setupPasscodeUI() {
+    keypad.addEventListener('click', function (e) {
+      var key = e.target.closest('.passcode-key');
+      if (!key || key.classList.contains('passcode-key--empty')) return;
+      if (key.id === 'passcode-back') { pressBackspace(); }
+      else if (key.dataset.digit !== undefined) { pressDigit(key.dataset.digit); }
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (!screen.isConnected) return;
+      if (e.key >= '0' && e.key <= '9') { e.preventDefault(); pressDigit(e.key); }
+      else if (e.key === 'Backspace') { e.preventDefault(); pressBackspace(); }
+    });
+  }
+
+  function tryResumeSession() {
+    if (sessionStorage.getItem(SESSION_KEY) !== '1') {
+      setupPasscodeUI();
+      return;
+    }
+
+    fetch('/api/auth', { credentials: 'include' })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (data && data.ok) {
+          screen.remove();
+          notifyReady();
+        } else {
+          sessionStorage.removeItem(SESSION_KEY);
+          setupPasscodeUI();
+        }
+      })
+      .catch(function () {
+        sessionStorage.removeItem(SESSION_KEY);
+        setupPasscodeUI();
+      });
+  }
+
+  tryResumeSession();
+})();
+</script>
+
+<script>
+(() => {
+'use strict';
+
+window.SI_STRICT_WRITE_INIT = true;
+
+function genId() {
+  return Math.random().toString(36).slice(2, 9);
+}
+
+// ── HELPERS ─────────────────────────────────────────────────────────────────
+const fmt       = n => {
+  const num = Math.round(Number(n) * 100) / 100;
+  const hasPence = !Number.isInteger(num);
+  return (
+    '£' +
+    num.toLocaleString('en-GB', {
+      minimumFractionDigits: hasPence ? 2 : 0,
+      maximumFractionDigits: hasPence ? 2 : 0,
+    })
+  );
+};
+const fmtAmount = n => Number(n) > 0 ? fmt(n) : '—';
+const esc       = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+function rowStatusBadge(amount, kind) {
+  const ok = Number(amount) > 0;
+  const label = kind === 'donor'
+    ? (ok ? 'Paid' : 'Unpaid')
+    : (ok ? 'Sent' : 'Not sent');
+  const mod = ok ? 'success' : 'danger';
+  return `<span class="status-badge status-badge--${mod}">${label}</span>`;
+}
+const sum       = arr => arr.reduce((t, n) => t + Number(n), 0);
+
+function ensureMonthHidden(month) {
+  if (!month.hiddenDonors) month.hiddenDonors = [];
+  if (!month.hiddenRecipients) month.hiddenRecipients = [];
+}
+
+function isPersonHidden(month, kind, personId) {
+  ensureMonthHidden(month);
+  const list = kind === 'donor' ? month.hiddenDonors : month.hiddenRecipients;
+  return list.includes(personId);
+}
+
+function setPersonHidden(month, kind, personId, hidden) {
+  ensureMonthHidden(month);
+  const list = kind === 'donor' ? month.hiddenDonors : month.hiddenRecipients;
+  const i = list.indexOf(personId);
+  if (hidden && i === -1) list.push(personId);
+  else if (!hidden && i !== -1) list.splice(i, 1);
+}
+
+function hasHiddenPeople(month, kind) {
+  if (!month) return false;
+  ensureMonthHidden(month);
+  const list = kind === 'recipients' ? month.hiddenRecipients : month.hiddenDonors;
+  return list.length > 0;
+}
+
+function isPersonArchived(p) { return !!p?.archived; }
+function activeDonors(data)     { return (data.donors || []).filter(d => !isPersonArchived(d)); }
+function activeRecipients(data) { return (data.recipients || []).filter(r => !isPersonArchived(r)); }
+function findDonor(data, id)     { return (data.donors || []).find(d => d.id === id); }
+function findRecipient(data, id) { return (data.recipients || []).find(r => r.id === id); }
+
+function donorsForPills(data, selectedId) {
+  const list = activeDonors(data);
+  const selected = findDonor(data, selectedId);
+  if (selected && isPersonArchived(selected) && !list.some(d => d.id === selectedId)) {
+    return [...list, selected];
+  }
+  return list;
+}
+
+function recipientsForPills(data, selectedId) {
+  const list = activeRecipients(data);
+  const selected = findRecipient(data, selectedId);
+  if (selected && isPersonArchived(selected) && !list.some(r => r.id === selectedId)) {
+    return [...list, selected];
+  }
+  return list;
+}
+
+function isPersonReferencedInReports(data, kind, id) {
+  const listKey = kind === 'donor' ? 'donations' : 'distributions';
+  const idField = kind === 'donor' ? 'donorId' : 'recipientId';
+  return Object.values(data.months || {}).some(month =>
+    (month[listKey] || []).some(row => row[idField] === id)
+  );
+}
+
+function archiveOrRemovePerson(data, type, id) {
+  const kind = type === 'donor' ? 'donor' : 'recipient';
+  const list = type === 'donor' ? data.donors : data.recipients;
+  const person = list.find(p => p.id === id);
+  if (!person) return;
+  if (isPersonReferencedInReports(data, kind, id)) {
+    person.archived = true;
+  } else {
+    const i = list.indexOf(person);
+    if (i !== -1) list.splice(i, 1);
+  }
+}
+
+function deletePeopleConfirmMessage(data, type, ids) {
+  const kind = type === 'donor' ? 'donor' : 'recipient';
+  const idList = [...ids];
+  const anyReferenced = idList.some(id => isPersonReferencedInReports(data, kind, id));
+  const n = idList.length;
+  if (n === 1) {
+    if (anyReferenced) {
+      return 'They\u2019ll be removed from the People list. Their name will stay on past reports.';
+    }
+    return 'They\u2019ll be removed completely. They aren\u2019t on any reports.';
+  }
+  if (anyReferenced) {
+    return `${n} people will be removed from the People list. Names will stay on past reports where they appear.`;
+  }
+  return `${n} people will be removed completely. None appear on any reports.`;
+}
+
+function syncMonthRoster(mKey, data) {
+  const month = data.months[mKey];
+  if (!month) return false;
+  ensureMonthHidden(month);
+  if (!month.donations) month.donations = [];
+  if (!month.distributions) month.distributions = [];
+  let changed = false;
+  activeDonors(data).forEach(donor => {
+    if (isPersonHidden(month, 'donor', donor.id)) return;
+    if (!month.donations.some(d => d.donorId === donor.id)) {
+      month.donations.push({ id: genId(), donorId: donor.id, amount: 0 });
+      changed = true;
+    }
+  });
+  activeRecipients(data).forEach(recip => {
+    if (isPersonHidden(month, 'recipient', recip.id)) return;
+    if (!month.distributions.some(d => d.recipientId === recip.id)) {
+      month.distributions.push({ id: genId(), recipientId: recip.id, amount: 0 });
+      changed = true;
+    }
+  });
+  return changed;
+}
+
+function orderedDonations(data, donations) {
+  const order = new Map((data.donors || []).map((d, i) => [d.id, i]));
+  return [...donations].sort((a, b) => (order.get(a.donorId) ?? 99) - (order.get(b.donorId) ?? 99));
+}
+
+function orderedDistributions(data, distributions) {
+  const order = new Map((data.recipients || []).map((r, i) => [r.id, i]));
+  return [...distributions].sort((a, b) => (order.get(a.recipientId) ?? 99) - (order.get(b.recipientId) ?? 99));
+}
+
+function monthLabel(key) {
+  const [y, m] = key.split('-');
+  return new Date(+y, +m - 1, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+}
+
+function monthKeyFromParts(year, month) {
+  return `${year}-${String(month).padStart(2, '0')}`;
+}
+
+function suggestedNewMonthParts(data) {
+  const keys = Object.keys(data.months || {}).sort();
+  if (!keys.length) {
+    const now = new Date();
+    return { year: now.getFullYear(), month: now.getMonth() + 1 };
+  }
+  const [y, m] = keys[keys.length - 1].split('-').map(Number);
+  let year = y;
+  let month = m + 1;
+  if (month > 12) {
+    month = 1;
+    year += 1;
+  }
+  return { year, month };
+}
+
+function preferredMonthForYear(year, data) {
+  const y = Number(year);
+  const available = Array.from({ length: 12 }, (_, i) => i + 1)
+    .filter(m => !data.months[monthKeyFromParts(y, m)]);
+  if (!available.length) return null;
+
+  const suggested = suggestedNewMonthParts(data);
+  if (suggested.year === y && available.includes(suggested.month)) {
+    return suggested.month;
+  }
+
+  const latestInYear = Object.keys(data.months || {})
+    .filter(k => k.startsWith(`${y}-`))
+    .sort()
+    .pop();
+  if (latestInYear) {
+    const afterLatest = available.find(m => m > Number(latestInYear.split('-')[1]));
+    if (afterLatest !== undefined) return afterLatest;
+  }
+
+  return available[0];
+}
+
+function newMonthOptionsHtml(year, data, preferredMonth) {
+  const available = Array.from({ length: 12 }, (_, i) => i + 1)
+    .filter(m => !data.months[monthKeyFromParts(year, m)]);
+  if (!available.length) {
+    return '<option value="">No reports available</option>';
+  }
+  const pick = available.includes(preferredMonth) ? preferredMonth : available[0];
+  return available.map(m => {
+    const label = new Date(2000, m - 1, 1).toLocaleDateString('en-GB', { month: 'long' });
+    const sel = m === pick ? ' selected' : '';
+    return `<option value="${m}"${sel}>${label}</option>`;
+  }).join('');
+}
+
+function refreshNewMonthSelect() {
+  const yearEl = document.getElementById('inp-year');
+  const monthEl = document.getElementById('inp-month');
+  if (!yearEl || !monthEl) return;
+  const year = yearEl.value.trim();
+  const preferred = preferredMonthForYear(year, getData());
+  monthEl.innerHTML = newMonthOptionsHtml(year, getData(), preferred);
+  monthEl.disabled = !monthEl.options.length || monthEl.options[0].value === '';
+}
+
+function donorName(data, id)     { return findDonor(data, id)?.name || '[Removed]'; }
+function recipientName(data, id) { return findRecipient(data, id)?.name || '[Removed]'; }
+
+function usedIdsForMonth(mKey, listKey, excludeEntryId = null) {
+  const idField = listKey === 'donations' ? 'donorId' : 'recipientId';
+  return (getData().months[mKey]?.[listKey] || [])
+    .filter(entry => entry.id !== excludeEntryId)
+    .map(entry => entry[idField]);
+}
+
+function personPillsHtml(people, { name, selectedId, usedIds = [], emptyMessage }) {
+  const list = people || [];
+  const taken = usedIds || [];
+  const available = list.filter(p => !taken.includes(p.id) || p.id === selectedId);
+  if (!available.length) {
+    return `<p class="pill-group--empty">${esc(emptyMessage || 'No one available.')}</p>`;
+  }
+  if (available.length === 1) {
+    const p = available[0];
+    return `<p class="field__display-name">${esc(p.name)}</p>
+      <input type="hidden" name="${esc(name)}" value="${esc(p.id)}">`;
+  }
+  const pills = available.map((p, i) => {
+    const checked = selectedId ? p.id === selectedId : i === 0;
+    return `<label class="pill-option">
+      <input type="radio" name="${esc(name)}" value="${esc(p.id)}"${checked ? ' checked' : ''}>
+      <span class="pill-option__text">${esc(p.name)}</span>
+    </label>`;
+  }).join('');
+  return `<div class="pill-group" role="radiogroup">${pills}</div>`;
+}
+
+function getSelectedPillValue(name) {
+  const checked = document.querySelector(`input[name="${name}"]:checked`);
+  if (checked) return checked.value;
+  return document.querySelector(`input[type="hidden"][name="${name}"]`)?.value;
+}
+
+// ── COMPUTED STATS ───────────────────────────────────────────────────────────
+function computeStats(data) {
+  const months = Object.values(data.months || {});
+  const totalRaised = sum(months.flatMap(m => (m.donations || []).map(d => d.amount)));
+  const totalSent   = sum(months.flatMap(m => (m.distributions || []).map(d => d.amount)));
+  return { totalRaised, totalSent, monthCount: months.length };
+}
+
+// ── ROW KEBAB MENU ───────────────────────────────────────────────────────────
+const KEBAB_SVG = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="3" r="1.25" fill="currentColor"/><circle cx="7" cy="7" r="1.25" fill="currentColor"/><circle cx="7" cy="11" r="1.25" fill="currentColor"/></svg>';
+const VISIBILITY_SVG = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8s-2.5 4.5-6.5 4.5S1.5 8 1.5 8z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.5"/></svg>';
+const CHEVRON_RIGHT_SVG = '<svg width="14" height="14" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M4.5 2.5L8.5 6 4.5 9.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function sectionHeadManageBtn(mKey, kind, month) {
+  const m = month ?? getData().months[mKey];
+  const hasHidden = hasHiddenPeople(m, kind);
+  const label = kind === 'recipients' ? 'Show or hide recipients' : 'Show or hide donors';
+  const activeClass = hasHidden ? ' section-head__manage--active' : '';
+  const pressed = hasHidden ? ' aria-pressed="true"' : ' aria-pressed="false"';
+  return `<button type="button" class="icon-btn section-head__manage${activeClass}" aria-label="${label}"${pressed} onclick="openMonthRosterManage('${mKey}','${kind}')">${VISIBILITY_SVG}</button>`;
+}
+
+function rowMenuHtml(items, opts = {}) {
+  const menuClass = opts.dropDown ? 'row-menu row-menu--drop-down' : 'row-menu';
+  const btns = items.map(item => {
+    const cls = item.danger ? 'row-menu__item row-menu__item--danger' : 'row-menu__item';
+    return `<button type="button" class="${cls}" onclick="closeRowMenus();${item.onClick}">${esc(item.label)}</button>`;
+  }).join('');
+  return `
+    <div class="${menuClass}">
+      <button type="button" class="icon-btn kebab-btn" aria-label="Actions" aria-haspopup="true" aria-expanded="false" onclick="toggleRowMenu(this, event)">${KEBAB_SVG}</button>
+      <div class="row-menu__dropdown" role="menu">${btns}</div>
+    </div>`;
+}
+
+window.toggleRowMenu = function(btn, e) {
+  e.stopPropagation();
+  const menu = btn.closest('.row-menu');
+  const wasOpen = menu.classList.contains('is-open');
+  closeRowMenus();
+  if (!wasOpen) {
+    menu.classList.add('is-open');
+    btn.setAttribute('aria-expanded', 'true');
+  }
+};
+
+window.closeRowMenus = function() {
+  document.querySelectorAll('.row-menu.is-open').forEach(menu => {
+    menu.classList.remove('is-open');
+    const btn = menu.querySelector('[aria-haspopup="true"]');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+  });
+};
+
+window.toggleHeaderNav = function(btn, e) {
+  e.stopPropagation();
+  const menu = btn.closest('.row-menu');
+  const wasOpen = menu.classList.contains('is-open');
+  closeRowMenus();
+  if (!wasOpen) {
+    menu.classList.add('is-open');
+    btn.setAttribute('aria-expanded', 'true');
+  }
+};
+
+window.selectNavPanel = function(name) {
+  closeRowMenus();
+  switchTab(name);
+};
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.row-menu')) closeRowMenus();
+});
+
+function monthListRowHtml(displayName, amount, kind, editFn) {
+  return `
+    <div class="list-row list-row--selectable list-row--nav">
+      <div class="list-row__body" onclick="${editFn}">
+        <div class="list-row__main">
+          <div class="list-row__name">${esc(displayName)}</div>
+          ${rowStatusBadge(amount, kind)}
+        </div>
+        <span class="list-row__amount">${fmtAmount(amount)}</span>
+        <span class="list-row__chevron">${CHEVRON_RIGHT_SVG}</span>
+      </div>
+    </div>`;
+}
+
+function peopleListRowHtml(person, type) {
+  return `
+    <div class="list-row list-row--selectable list-row--nav">
+      <div class="list-row__body" data-person-type="${esc(type)}" data-person-id="${esc(person.id)}" role="button" tabindex="0">
+        <span class="list-row__name">${esc(person.name)}</span>
+        <span class="list-row__chevron">${CHEVRON_RIGHT_SVG}</span>
+      </div>
+    </div>`;
+}
+
+// ── NAV / PANELS ─────────────────────────────────────────────────────────────
+let activePanel = 'months';
+
+const PANEL_TITLES = {
+  months: 'Reports',
+  overview: 'Overview',
+  people: 'People',
+};
+
+function updateHeaderTitle() {
+  const el = document.getElementById('header-page-title');
+  if (el) el.textContent = PANEL_TITLES[activePanel] || activePanel;
+}
+
+function updateHeaderActions() {
+  const isMonths = activePanel === 'months';
+  const monthActs = document.getElementById('header-month-actions');
+  if (monthActs) monthActs.hidden = !isMonths;
+  if (isMonths) renderMonthHeadMenu();
+}
+
+function switchTab(name) {
+  activePanel = name;
+  document.querySelectorAll('.panel').forEach(p => p.classList.add('hidden'));
+  document.getElementById('panel-' + name).classList.remove('hidden');
+  document.querySelectorAll('#header-nav [data-panel]').forEach(btn => {
+    btn.classList.toggle('row-menu__item--active', btn.dataset.panel === name);
+  });
+  if (name === 'overview') renderOverview();
+  if (name === 'people')   renderPeople();
+  if (name === 'months')   renderMonths();
+  updateHeaderActions();
+  updateHeaderTitle();
+}
+
+// ── OVERVIEW ─────────────────────────────────────────────────────────────────
+function renderOverview() {
+  const data = getData();
+  const { totalRaised, totalSent, monthCount } = computeStats(data);
+
+  document.getElementById('reserves-display').textContent = fmt(data.reserves ?? 0);
+
+  document.getElementById('overview-stats').innerHTML = `
+    <div class="stat-card stat-card--accent">
+      <p class="stat-card__label">Total Raised</p>
+      <p class="stat-card__value">${fmt(totalRaised)}</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-card__label">Total Sent</p>
+      <p class="stat-card__value">${fmt(totalSent)}</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-card__label">Donors</p>
+      <p class="stat-card__value">${activeDonors(data).length}</p>
+    </div>
+    <div class="stat-card">
+      <p class="stat-card__label">Active reports</p>
+      <p class="stat-card__value">${monthCount}</p>
+    </div>`;
+}
+
+document.getElementById('btn-edit-reserves').addEventListener('click', () => {
+  const data = getData();
+  openModal('Edit Reserves', `
+    <div class="field">
+      <label class="field__label" for="inp-reserves">Reserves Amount</label>
+      <div class="field__prefix-wrap">
+        <span class="field__prefix">£</span>
+        <input class="field__input field__input--prefixed" id="inp-reserves" type="number" min="0" step="0.01" value="${data.reserves ?? 0}">
+      </div>
+    </div>`,
+    () => {
+      const val = parseFloat(document.getElementById('inp-reserves').value);
+      if (isNaN(val) || val < 0) return alert('Please enter a valid amount.');
+      const d = getData(); d.reserves = val; saveData(d);
+      renderOverview();
+    }
+  );
+});
+
+// ── PEOPLE ───────────────────────────────────────────────────────────────────
+function peopleSectionTitle(count, singular) {
+  return count === 1 ? `1 ${singular}` : `${count} ${singular}s`;
+}
+
+let _peopleListFingerprint = '';
+
+function handlePeopleListClick(e) {
+  const body = e.target.closest('.list-row__body[data-person-type]');
+  if (!body) return;
+  editPerson(body.dataset.personType, body.dataset.personId);
+}
+
+function handlePeopleListKeydown(e) {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const body = e.target.closest('.list-row__body[data-person-type]');
+  if (!body) return;
+  e.preventDefault();
+  editPerson(body.dataset.personType, body.dataset.personId);
+}
+
+function renderPeople() {
+  const data = getData();
+  const donors = activeDonors(data);
+  const recipients = activeRecipients(data);
+  const fp = JSON.stringify({ donors, recipients });
+
+  document.getElementById('donors-title').textContent = peopleSectionTitle(donors.length, 'Donor');
+  document.getElementById('recipients-title').textContent = peopleSectionTitle(recipients.length, 'Recipient');
+
+  if (fp === _peopleListFingerprint) return;
+  _peopleListFingerprint = fp;
+
+  document.getElementById('donors-list').innerHTML = donors.length
+    ? donors.map(d => peopleListRowHtml(d, 'donor')).join('')
+    : '<div class="empty-row">No donors yet</div>';
+
+  document.getElementById('recipients-list').innerHTML = recipients.length
+    ? recipients.map(r => peopleListRowHtml(r, 'recipient')).join('')
+    : '<div class="empty-row">No recipients yet</div>';
+}
+
+document.getElementById('donors-list').addEventListener('click', handlePeopleListClick);
+document.getElementById('recipients-list').addEventListener('click', handlePeopleListClick);
+document.getElementById('donors-list').addEventListener('keydown', handlePeopleListKeydown);
+document.getElementById('recipients-list').addEventListener('keydown', handlePeopleListKeydown);
+
+document.getElementById('btn-add-donor').addEventListener('click', () => {
+  openModal('Add Donor', `
+    <div class="field">
+      <label class="field__label" for="inp-pname">Full Name</label>
+      <input class="field__input" id="inp-pname" type="text" placeholder="e.g. Ahmed Hassan" autocomplete="off">
+    </div>`,
+    () => {
+      const name = document.getElementById('inp-pname').value.trim();
+      if (!name) return alert('Please enter a name.');
+      const d = getData();
+      d.donors.push({ id: genId(), name });
+      saveData(d); renderPeople();
+    }
+  );
+  setTimeout(() => document.getElementById('inp-pname')?.focus(), 80);
+});
+
+document.getElementById('btn-add-recipient').addEventListener('click', () => {
+  openModal('Add Recipient', `
+    <div class="field">
+      <label class="field__label" for="inp-pname">Full Name</label>
+      <input class="field__input" id="inp-pname" type="text" placeholder="e.g. Zaynab Munye" autocomplete="off">
+    </div>`,
+    () => {
+      const name = document.getElementById('inp-pname').value.trim();
+      if (!name) return alert('Please enter a name.');
+      const d = getData();
+      d.recipients.push({ id: genId(), name });
+      saveData(d); renderPeople();
+    }
+  );
+  setTimeout(() => document.getElementById('inp-pname')?.focus(), 80);
+});
+
+window.editPerson = function(type, id) {
+  const data  = getData();
+  const list  = type === 'donor' ? activeDonors(data) : activeRecipients(data);
+  const person = list.find(p => p.id === id);
+  if (!person) return;
+  const label = type === 'donor' ? 'Donor' : 'Recipient';
+
+  openModal(`Edit ${label}`, `
+    <div class="field">
+      <label class="field__label" for="inp-pname">Full Name</label>
+      <input class="field__input" id="inp-pname" type="text" value="${esc(person.name)}" autocomplete="off">
+    </div>`,
+    () => {
+      const name = document.getElementById('inp-pname').value.trim();
+      if (!name) return alert('Please enter a name.');
+      const d = getData();
+      const l = type === 'donor' ? d.donors : d.recipients;
+      const p = l.find(x => x.id === id);
+      if (p) p.name = name;
+      saveData(d); renderPeople();
+    },
+    {
+      onDelete: () => { closeModal(); deletePerson(type, id); },
+    }
+  );
+  setTimeout(() => { const i = document.getElementById('inp-pname'); if(i){i.focus();i.select();} }, 80);
+};
+
+window.deletePerson = function(type, id) {
+  const label = type === 'donor' ? 'donor' : 'recipient';
+  const data = getData();
+  openConfirm(
+    `Delete ${label}?`,
+    deletePeopleConfirmMessage(data, type, new Set([id])),
+    () => {
+      const d = getData();
+      archiveOrRemovePerson(d, type, id);
+      saveData(d); renderPeople();
+    },
+    true
+  );
+};
+
+// ── MONTHS ───────────────────────────────────────────────────────────────────
+let activeMonthKey = null;
+
+function renderMonthHeadMenu() {
+  const el = document.getElementById('month-head-menu');
+  if (!el) return;
+  if (!activeMonthKey) {
+    el.innerHTML = '';
+    return;
+  }
+  el.innerHTML = rowMenuHtml([
+    { label: 'Delete report', danger: true, onClick: `deleteMonth('${activeMonthKey}')` },
+  ], { dropDown: true });
+}
+
+function updateMonthSelectLabel() {
+  const sel = document.getElementById('month-select');
+  const label = document.getElementById('month-select-label');
+  if (!sel || !label) return;
+  const opt = sel.options[sel.selectedIndex];
+  label.textContent = opt?.textContent?.trim() || '—';
+}
+
+function renderMonths() {
+  const data = getData();
+  const keys = Object.keys(data.months || {}).sort().reverse();
+  const sel  = document.getElementById('month-select');
+
+  sel.innerHTML = keys.length
+    ? keys.map(k => `<option value="${k}"${k===activeMonthKey?' selected':''}>${monthLabel(k)}</option>`).join('')
+    : '<option value="">No reports yet</option>';
+
+  if (!activeMonthKey || !data.months[activeMonthKey]) {
+    activeMonthKey = keys[0] || null;
+  }
+
+  updateMonthSelectLabel();
+  renderMonthHeadMenu();
+  renderMonthDetail(activeMonthKey);
+}
+
+document.getElementById('month-select').addEventListener('change', e => {
+  activeMonthKey = e.target.value || null;
+  updateMonthSelectLabel();
+  renderMonthHeadMenu();
+  renderMonthDetail(activeMonthKey);
+});
+
+document.getElementById('btn-new-month').addEventListener('click', () => {
+  const data = getData();
+  const suggested = suggestedNewMonthParts(data);
+  openModal('New Report', `
+    <div class="field">
+      <label class="field__label" for="inp-year">Year</label>
+      <input class="field__input" id="inp-year" type="number" min="2020" max="2099" value="${suggested.year}">
+    </div>
+    <div class="field">
+      <label class="field__label" for="inp-month">Month</label>
+      <select class="field__select" id="inp-month">
+        ${newMonthOptionsHtml(suggested.year, data, suggested.month)}
+      </select>
+    </div>`,
+    () => {
+      const y = document.getElementById('inp-year').value.trim();
+      const m = document.getElementById('inp-month').value;
+      if (!m) return alert('No reports available for that year.');
+      const key = monthKeyFromParts(y, m);
+      const d = getData();
+      if (d.months[key]) return alert('That report already exists.');
+      d.months[key] = { donations: [], distributions: [], notes: [window.SI_DEFAULT_MONTHLY_NOTE] };
+      syncMonthRoster(key, d);
+      saveData(d);
+      activeMonthKey = key;
+      renderMonths();
+    }
+  );
+  setTimeout(() => {
+    const yearEl = document.getElementById('inp-year');
+    yearEl?.addEventListener('input', refreshNewMonthSelect);
+    yearEl?.addEventListener('change', refreshNewMonthSelect);
+    refreshNewMonthSelect();
+  }, 80);
+});
+
+function renderMonthDetail(key) {
+  const detailEl = document.getElementById('month-detail');
+  if (!key) { detailEl.innerHTML = '<p style="color:var(--muted);text-align:center;padding:1.5rem 0;font-size:0.9rem;">No reports yet — create one above.</p>'; return; }
+
+  const data  = getData();
+  const month = data.months[key];
+  if (!month) { detailEl.innerHTML = ''; return; }
+
+  if (syncMonthRoster(key, data)) saveData(data);
+
+  ensureMonthHidden(month);
+
+  const donations     = orderedDonations(data, month.donations || []);
+  const distributions = orderedDistributions(data, month.distributions || []);
+  const visibleDonations = donations.filter(d => !isPersonHidden(month, 'donor', d.donorId));
+  const visibleDistributions = distributions.filter(d => !isPersonHidden(month, 'recipient', d.recipientId));
+  const notes         = month.notes         || [];
+
+  const totalRaised = sum(visibleDonations.map(d => d.amount));
+
+  detailEl.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:0.85rem;">
+
+      <div class="month-summary">
+        <div class="month-summary__cell">
+          <span class="month-summary__label">Raised</span>
+          <span class="month-summary__val">${fmt(totalRaised)}</span>
+        </div>
+      </div>
+
+      <!-- DONORS -->
+      <div class="card">
+        <div class="section-head" id="md-don-head">
+          <h3 class="section-head__title">Donors</h3>
+          ${sectionHeadManageBtn(key, 'donors', month)}
+        </div>
+        <div id="md-donations">
+          ${visibleDonations.map(d => monthListRowHtml(
+            donorName(data, d.donorId),
+            d.amount,
+            'donor',
+            `editDonation('${key}','${d.id}')`
+          )).join('')}
+        </div>
+      </div>
+
+      <!-- RECIPIENTS -->
+      <div class="card">
+        <div class="section-head" id="md-dist-head">
+          <h3 class="section-head__title">Recipients</h3>
+          ${sectionHeadManageBtn(key, 'recipients', month)}
+        </div>
+        <div id="md-distributions">
+          ${visibleDistributions.map(d => monthListRowHtml(
+            recipientName(data, d.recipientId),
+            d.amount,
+            'recipient',
+            `editDistribution('${key}','${d.id}')`
+          )).join('')}
+        </div>
+      </div>
+
+      <!-- NOTES -->
+      <div class="card card--menu-overflow">
+        <div class="section-head">
+          <h3 class="section-head__title">Notes</h3>
+        </div>
+        <div id="md-notes">
+          ${notes.length
+            ? notes.map((n, i) => `
+                <div class="list-row">
+                  <span class="list-row__name" style="white-space:normal;line-height:1.4;font-weight:500">${esc(n)}</span>
+                  <div class="list-row__actions">
+                    ${rowMenuHtml([
+                      { label: 'Edit', onClick: `editNote('${key}',${i})` },
+                      { label: 'Delete', danger: true, onClick: `deleteNote('${key}',${i})` },
+                    ])}
+                  </div>
+                </div>`).join('')
+            : '<div class="empty-row">No notes added</div>'}
+        </div>
+        <div class="add-row">
+          <button class="add-row__btn" onclick="addNote('${key}')">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Add Note
+          </button>
+        </div>
+      </div>
+
+    </div>`;
+}
+
+// ── MONTH CRUD ───────────────────────────────────────────────────────────────
+window.editDonation = function(mKey, id) {
+  const data = getData();
+  const donation = (data.months[mKey].donations || []).find(x => x.id === id);
+  if (!donation) return;
+  const usedIds = usedIdsForMonth(mKey, 'donations', id);
+  openModal('Edit Donation', `
+    <div class="field">
+      <span class="field__label" id="donor-label">Donor</span>
+      ${personPillsHtml(donorsForPills(data, donation.donorId), { name: 'inp-donor', selectedId: donation.donorId, usedIds })}
+    </div>
+    <div class="field">
+      <label class="field__label" for="inp-amount">Amount</label>
+      <div class="field__prefix-wrap">
+        <span class="field__prefix">£</span>
+        <input class="field__input field__input--prefixed" id="inp-amount" type="number" min="0" step="0.01" value="${donation.amount}">
+      </div>
+    </div>`,
+    () => {
+      const donorId = getSelectedPillValue('inp-donor');
+      const amount  = parseFloat(document.getElementById('inp-amount').value);
+      if (!donorId || isNaN(amount) || amount < 0) return alert('Please select a donor and enter an amount of 0 or more.');
+      const d = getData();
+      const item = d.months[mKey].donations.find(x => x.id === id);
+      if (item) { item.donorId = donorId; item.amount = amount; }
+      saveData(d); renderMonthDetail(mKey);
+    }
+  );
+  setTimeout(() => document.getElementById('inp-amount')?.focus(), 80);
+};
+
+window.editDistribution = function(mKey, id) {
+  const data = getData();
+  const dist = (data.months[mKey].distributions || []).find(x => x.id === id);
+  if (!dist) return;
+  const usedIds = usedIdsForMonth(mKey, 'distributions', id);
+  openModal('Edit Distribution', `
+    <div class="field">
+      <span class="field__label" id="recip-label">Recipient</span>
+      ${personPillsHtml(recipientsForPills(data, dist.recipientId), { name: 'inp-recip', selectedId: dist.recipientId, usedIds })}
+    </div>
+    <div class="field">
+      <label class="field__label" for="inp-amount">Amount Sent</label>
+      <div class="field__prefix-wrap">
+        <span class="field__prefix">£</span>
+        <input class="field__input field__input--prefixed" id="inp-amount" type="number" min="0" step="0.01" value="${dist.amount}">
+      </div>
+    </div>`,
+    () => {
+      const recipientId = getSelectedPillValue('inp-recip');
+      const amount      = parseFloat(document.getElementById('inp-amount').value);
+      if (!recipientId || isNaN(amount) || amount < 0) return alert('Please select a recipient and enter an amount of 0 or more.');
+      const d = getData();
+      const item = d.months[mKey].distributions.find(x => x.id === id);
+      if (item) { item.recipientId = recipientId; item.amount = amount; }
+      saveData(d); renderMonthDetail(mKey);
+    }
+  );
+  setTimeout(() => document.getElementById('inp-amount')?.focus(), 80);
+};
+
+window.addNote = function(mKey) {
+  openModal('Add Note', `
+    <div class="field">
+      <label class="field__label" for="inp-note">Note</label>
+      <input class="field__input" id="inp-note" type="text" placeholder="Enter note" autocomplete="off">
+    </div>`,
+    () => {
+      const text = document.getElementById('inp-note').value.trim();
+      if (!text) return alert('Please enter a note.');
+      const d = getData();
+      d.months[mKey].notes.push(text);
+      saveData(d); renderMonthDetail(mKey);
+    }
+  );
+  setTimeout(() => document.getElementById('inp-note')?.focus(), 80);
+};
+
+window.editNote = function(mKey, idx) {
+  const d = getData();
+  const notes = d.months[mKey].notes || [];
+  const text = notes[idx];
+  if (text === undefined) return;
+  openModal('Edit Note', `
+    <div class="field">
+      <label class="field__label" for="inp-note">Note</label>
+      <input class="field__input" id="inp-note" type="text" value="${esc(text)}" autocomplete="off">
+    </div>`,
+    () => {
+      const newText = document.getElementById('inp-note').value.trim();
+      if (!newText) return alert('Please enter a note.');
+      const data = getData();
+      if (data.months[mKey].notes[idx] !== undefined) {
+        data.months[mKey].notes[idx] = newText;
+      }
+      saveData(data); renderMonthDetail(mKey);
+    }
+  );
+  setTimeout(() => { const i = document.getElementById('inp-note'); if (i) { i.focus(); i.select(); } }, 80);
+};
+
+window.deleteNote = function(mKey, idx) {
+  const d = getData();
+  d.months[mKey].notes.splice(idx, 1);
+  saveData(d); renderMonthDetail(mKey);
+};
+
+window.deleteMonth = function(key) {
+  openConfirm(
+    `Delete ${monthLabel(key)}?`,
+    'All donations, distributions and notes for this report will be permanently removed.',
+    () => {
+      const d = getData();
+      delete d.months[key];
+      saveData(d);
+      activeMonthKey = null;
+      renderMonths();
+    },
+    true
+  );
+};
+
+// ── MODAL ────────────────────────────────────────────────────────────────────
+let _onConfirm = null;
+
+const overlay     = document.getElementById('overlay');
+const modalTitle  = document.getElementById('modal-title');
+const modalBody   = document.getElementById('modal-body');
+const modalFooter = document.getElementById('modal-footer');
+
+function openModal(title, bodyHTML, onConfirm, opts = {}) {
+  _onConfirm = onConfirm;
+  modalTitle.textContent  = title;
+  modalBody.innerHTML     = bodyHTML;
+  if (opts.onDelete) {
+    modalFooter.className = 'modal__footer modal__footer--with-delete';
+    modalFooter.innerHTML = `
+      <button type="button" class="btn btn--danger" id="btn-delete">Delete</button>
+      <div class="modal__footer-actions">
+        <button type="button" class="btn btn--ghost" id="btn-cancel">Cancel</button>
+        <button type="button" class="btn btn--primary" id="btn-confirm">Save</button>
+      </div>`;
+    document.getElementById('btn-delete').addEventListener('click', () => opts.onDelete());
+  } else {
+    modalFooter.className = 'modal__footer';
+    modalFooter.innerHTML = `
+      <button type="button" class="btn btn--ghost" id="btn-cancel">Cancel</button>
+      <button type="button" class="btn btn--primary" id="btn-confirm">Save</button>`;
+  }
+  const confirmBtn = document.getElementById('btn-confirm');
+  confirmBtn.disabled = false;
+  document.getElementById('btn-cancel').addEventListener('click', closeModal);
+  confirmBtn.addEventListener('click', () => { _onConfirm && _onConfirm(); closeModal(); });
+  overlay.classList.add('overlay--open');
+  document.body.style.overflow = 'hidden';
+}
+
+function openConfirm(title, message, onConfirm, isDanger = false) {
+  _onConfirm = onConfirm;
+  modalTitle.textContent = title;
+  modalBody.innerHTML    = `<p style="font-size:0.9rem;color:var(--muted);margin:0;">${esc(message)}</p>`;
+  modalFooter.className  = 'modal__footer';
+  modalFooter.innerHTML  = `
+    <button class="btn btn--ghost" id="btn-cancel">Cancel</button>
+    <button class="btn ${isDanger ? 'btn--danger' : 'btn--primary'}" id="btn-confirm">${isDanger ? 'Delete' : 'Confirm'}</button>`;
+  document.getElementById('btn-cancel').addEventListener('click', closeModal);
+  document.getElementById('btn-confirm').addEventListener('click', () => { _onConfirm && _onConfirm(); closeModal(); });
+  overlay.classList.add('overlay--open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  overlay.classList.remove('overlay--open');
+  document.body.style.overflow = '';
+  _onConfirm = null;
+}
+
+window.openMonthRosterManage = function(mKey, kind) {
+  const data = getData();
+  const month = data.months[mKey];
+  if (!month) return;
+  ensureMonthHidden(month);
+  const isRecipients = kind === 'recipients';
+  const people = isRecipients ? activeRecipients(data) : activeDonors(data);
+  const personKind = isRecipients ? 'recipient' : 'donor';
+  const title = isRecipients ? 'Manage recipients' : 'Manage donors';
+  const listHtml = people.length
+    ? people.map(p => {
+        const visible = !isPersonHidden(month, personKind, p.id);
+        return `<label class="manage-roster-row">
+          <span>${esc(p.name)}</span>
+          <input type="checkbox" class="manage-roster-toggle" data-person-id="${esc(p.id)}"${visible ? ' checked' : ''} aria-label="Show ${esc(p.name)} in this report">
+        </label>`;
+      }).join('')
+    : `<p class="manage-roster-note" style="margin:0;padding:0.85rem;">No ${isRecipients ? 'recipients' : 'donors'} on the People tab yet.</p>`;
+
+  openModal(title, `
+    <div class="manage-roster-list">${listHtml}</div>`,
+    () => {
+      const d = getData();
+      const m = d.months[mKey];
+      if (!m) return;
+      ensureMonthHidden(m);
+      document.querySelectorAll('.manage-roster-toggle').forEach(el => {
+        const personId = el.getAttribute('data-person-id');
+        setPersonHidden(m, personKind, personId, !el.checked);
+      });
+      people.forEach(p => {
+        if (isPersonHidden(m, personKind, p.id)) return;
+        const listKey = isRecipients ? 'distributions' : 'donations';
+        const idField = isRecipients ? 'recipientId' : 'donorId';
+        if (!m[listKey].some(row => row[idField] === p.id)) {
+          m[listKey].push({ id: genId(), [idField]: p.id, amount: 0 });
+        }
+      });
+      saveData(d);
+      renderMonthDetail(mKey);
+    }
+  );
+  const confirmBtn = document.getElementById('btn-confirm');
+  if (confirmBtn) confirmBtn.textContent = 'Save';
+};
+
+document.getElementById('modal-close').addEventListener('click', closeModal);
+overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (overlay.classList.contains('overlay--open')) closeModal();
+    else closeRowMenus();
+  }
+});
+
+// ── LOAD / SAVE UI ───────────────────────────────────────────────────────────
+function showLoadState(state, message) {
+  const main = document.getElementById('main');
+  const panels = main.querySelectorAll('.panel');
+  let el = document.getElementById('load-state');
+  if (state === 'loading') {
+    panels.forEach(p => p.classList.add('hidden'));
+    if (!el) {
+      el = document.createElement('p');
+      el.id = 'load-state';
+      el.className = 'load-state';
+      main.prepend(el);
+    }
+    el.className = 'load-state';
+    el.textContent = 'Loading…';
+    el.hidden = false;
+    return;
+  }
+  if (state === 'error') {
+    panels.forEach(p => p.classList.add('hidden'));
+    if (!el) {
+      el = document.createElement('p');
+      el.id = 'load-state';
+      main.prepend(el);
+    }
+    el.className = 'load-state load-state--error';
+    el.textContent = message || 'Failed to load data.';
+    el.hidden = false;
+    return;
+  }
+  if (el) el.hidden = true;
+}
+
+const saveStatusEl = document.getElementById('save-status');
+let saveStatusTimer = null;
+
+setSaveStatusHandler((status, message) => {
+  if (!saveStatusEl) return;
+  clearTimeout(saveStatusTimer);
+  if (status === 'saving') {
+    saveStatusEl.textContent = 'Saving…';
+    saveStatusEl.className = 'header__save-status';
+    saveStatusEl.hidden = false;
+    return;
+  }
+  if (status === 'saved') {
+    saveStatusEl.textContent = 'Saved';
+    saveStatusEl.className = 'header__save-status';
+    saveStatusEl.hidden = false;
+    saveStatusTimer = setTimeout(() => { saveStatusEl.hidden = true; }, 2000);
+    return;
+  }
+  if (status === 'error') {
+    saveStatusEl.textContent = message ? `Save failed` : 'Save failed';
+    saveStatusEl.className = 'header__save-status header__save-status--error';
+    saveStatusEl.hidden = false;
+    saveStatusEl.title = message || '';
+  }
+});
+
+// ── INIT (after passcode / session) ───────────────────────────────────────────
+function runAdminInit() {
+  (async () => {
+    if (!isDataReady()) showLoadState('loading');
+    try {
+      await loadData();
+      showLoadState('ready');
+      switchTab('months');
+    } catch (e) {
+      showLoadState('error', e.message);
+    }
+  })();
+}
+
+window.addEventListener('si-admin-ready', runAdminInit, { once: true });
+
+})();
+</script>
+</body>
+</html>

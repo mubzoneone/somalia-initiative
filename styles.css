@@ -1,0 +1,378 @@
+/* ─── TOKENS ──────────────────────────────────────────────────────────────── */
+:root {
+  --bg:            #f2f4f7;
+  --card:          #ffffff;
+  --accent:        #2f72b8;
+  --accent-dark:   #245a95;
+  --accent-subtle: rgba(47,114,184,0.08);
+  --border:        #e2e6ec;
+  --text:          #0d1117;
+  --text-muted:    #6b7685;
+  --black:         #0d1117;
+  --white:         #ffffff;
+  --radius:        6px;
+  --radius-lg:     10px;
+  --radius-pill:   9999px;
+  --max-width:     440px;
+  --font:          "DM Sans", system-ui, -apple-system, sans-serif;
+
+  /* layout rhythm */
+  --header-h:      clamp(68px, 13dvh, 88px);
+  --stack-gap:     clamp(0.4rem, 1.2dvh, 0.75rem);
+}
+
+/* ─── RESET ───────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  height: 100dvh;
+  overflow: hidden;
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--text);
+  background: var(--accent);
+}
+
+/* ─── APP SHELL ───────────────────────────────────────────────────────────── */
+.app-shell {
+  max-width: var(--max-width);
+  height: 100dvh;
+  margin: 0 auto;
+  display: grid;
+  grid-template-rows: var(--header-h) auto 1fr auto;
+  row-gap: var(--stack-gap);
+  background: var(--accent);
+  overflow: hidden;
+}
+
+/* ─── HEADER ──────────────────────────────────────────────────────────────── */
+.header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0 1rem;
+  background: var(--accent);
+  color: var(--white);
+}
+
+.header__star {
+  width: clamp(36px, 7dvh, 48px);
+  height: clamp(36px, 7dvh, 48px);
+  flex-shrink: 0;
+  filter: drop-shadow(0 1px 4px rgba(0,0,0,0.25));
+}
+
+.header__brand {
+  min-width: 0;
+  line-height: 1.1;
+}
+
+.header__title {
+  margin: 0;
+  font-size: clamp(1.1rem, 3.5dvh, 1.4rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+}
+
+.header__subtitle {
+  margin: 0.1rem 0 0;
+  font-size: clamp(0.94rem, 2.6dvh, 1.01rem);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  opacity: 0.85;
+}
+
+.header__reserves {
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.35);
+  color: var(--white);
+  padding: 0.3rem 0.65rem;
+  border-radius: var(--radius);
+  text-align: center;
+  line-height: 1.2;
+  min-width: 68px;
+  backdrop-filter: blur(6px);
+}
+
+.header__reserves-label {
+  display: block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.8;
+}
+
+.header__reserves-value {
+  display: block;
+  font-size: clamp(0.85rem, 2.5dvh, 1rem);
+  font-weight: 800;
+}
+
+/* ─── MONTH PICKER ────────────────────────────────────────────────────────── */
+.month-picker {
+  position: relative;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  padding: 0 0.75rem;
+  background: var(--accent);
+}
+
+.month-picker__pill {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  background: var(--white);
+  border: 1.5px solid rgba(255,255,255,0.4);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 3px 14px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.1);
+  height: clamp(40px, 8dvh, 52px);
+}
+
+.month-picker__pill--static {
+  cursor: default;
+}
+
+.month-picker__label {
+  text-align: center;
+  white-space: nowrap;
+  font-size: clamp(0.85rem, 2.5dvh, 1rem);
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+/* ─── MAIN PANEL ──────────────────────────────────────────────────────────── */
+.main-panel {
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0 0.75rem 0.5rem;
+  background: var(--accent);
+  overflow: hidden;
+}
+
+.main-panel__inner {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-panel .empty-state {
+  color: rgba(255,255,255,0.85);
+  font-weight: 500;
+}
+
+/* ─── REPORT LAYOUT ───────────────────────────────────────────────────────── */
+/*
+  Grid splits the panel into three rows:
+    1. Stats (fixed, shrink-0)
+    2. Donation list (flex-fill — items scale to fill space)
+    3. Notes (fixed, only rendered when present)
+*/
+.report-layout {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-gap);
+}
+
+/* STAT CARDS */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--stack-gap);
+  flex-shrink: 0;
+}
+
+.card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+.stat-card {
+  padding: clamp(0.6rem, 2dvh, 1rem) clamp(0.65rem, 2.5vw, 0.9rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.2rem;
+}
+
+.stat-card__label {
+  margin: 0;
+  font-size: clamp(0.72rem, 2dvh, 0.85rem);
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.01em;
+}
+
+.stat-card__value {
+  margin: 0;
+  font-size: clamp(1.4rem, 5dvh, 2.1rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--text);
+}
+
+/* DONATION LIST */
+.donation-list {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-gap);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* When notes are present, list sizes to its content so notes fills the gap */
+.report-layout--has-notes .donation-list {
+  flex: 0 0 auto;
+}
+
+.donation-row {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: stretch;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1.5px solid var(--border);
+  /* enforce a sensible min so rows don't collapse to nothing */
+  min-height: clamp(44px, 9dvh, 72px);
+  max-height: clamp(60px, 16dvh, 110px);
+}
+
+.donation-row__info {
+  flex: 1;
+  min-width: 0;
+  background: var(--white);
+  padding: 0 clamp(0.65rem, 3vw, 1rem);
+  display: flex;
+  align-items: center;
+}
+
+.donation-row__name {
+  margin: 0;
+  font-size: clamp(0.88rem, 2.5dvh, 1.05rem);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+}
+
+.donation-row__amount {
+  flex-shrink: 0;
+  min-width: clamp(64px, 20vw, 88px);
+  background: var(--black);
+  color: var(--white);
+  font-weight: 800;
+  font-size: clamp(0.95rem, 3dvh, 1.25rem);
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 clamp(0.6rem, 2.5vw, 1rem);
+}
+
+.donation-list__empty {
+  flex: 1;
+  min-height: clamp(44px, 9dvh, 72px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  border: 1.5px dashed var(--border);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+/* NOTES — grows to fill any leftover space when donation list is short */
+.notes-section {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.notes-card {
+  flex: 1;
+  padding: clamp(0.55rem, 1.8dvh, 0.85rem) clamp(0.65rem, 3vw, 0.9rem);
+}
+
+.notes-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.45rem;
+  font-size: clamp(0.8rem, 2.2dvh, 0.9rem);
+  font-weight: 700;
+  padding-bottom: 0.45rem;
+  border-bottom: 1.5px solid var(--border);
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.notes-card__list {
+  margin: 0;
+  padding: 0 0 0 1.1rem;
+  font-size: clamp(0.78rem, 2dvh, 0.88rem);
+  line-height: 1.5;
+}
+
+.notes-card__list li { margin-bottom: 0.2rem; }
+.notes-card__list li:last-child { margin-bottom: 0; }
+
+/* ─── EMPTY & FOOTER ──────────────────────────────────────────────────────── */
+.empty-state {
+  text-align: center;
+  padding: 2rem 1rem;
+  color: var(--text-muted);
+}
+
+.site-footer {
+  text-align: center;
+  padding: 0.5rem;
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.5);
+  background: var(--accent);
+  flex-shrink: 0;
+}
+
+.hidden { display: none !important; }
+
+/* ─── ANIMATION ───────────────────────────────────────────────────────────── */
+@keyframes reportEnter {
+  from { transform: translateY(-8px); opacity: 0.7; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.main-panel__inner.public-month-enter {
+  animation: reportEnter 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  will-change: transform, opacity;
+}
+
+/* ─── WIDER SCREENS ───────────────────────────────────────────────────────── */
+@media (min-width: 480px) {
+  :root {
+    --header-h: clamp(68px, 12dvh, 84px);
+  }
+
+  .main-panel { padding: 0 1rem 0.75rem; }
+}

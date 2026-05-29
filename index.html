@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="description" content="Somalia Initiative Tracker — monthly charitable donation reports">
+  <meta property="og:title" content="Somalia Initiative Tracker">
+  <meta property="og:description" content="Monthly charitable donation reports">
+  <meta property="og:image" content="logo.png">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Somalia Initiative Tracker">
+  <meta name="twitter:description" content="Monthly charitable donation reports">
+  <meta name="twitter:image" content="logo.png">
+  <link rel="icon" type="image/png" href="icon-logo.png">
+  <link rel="apple-touch-icon" href="icon-logo.png">
+  <title>Somalia Initiative Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;0,9..40,800;1,9..40,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-shell">
+
+    <!-- HEADER -->
+    <header class="header">
+      <svg class="header__star" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M32 4L38.5 24.5H60L42.75 37.5L49.25 58L32 45L14.75 58L21.25 37.5L4 24.5H25.5L32 4Z" fill="white"/>
+      </svg>
+      <div class="header__brand" aria-label="Somalia Initiative Tracker">
+        <h1 class="header__title">Somalia Initiative</h1>
+        <p class="header__subtitle">Tracker</p>
+      </div>
+      <div class="header__reserves" id="header-reserves" aria-label="Current reserves">
+        <span class="header__reserves-label">Reserves</span>
+        <span class="header__reserves-value" id="reserves-value">—</span>
+      </div>
+    </header>
+
+    <!-- CURRENT MONTH -->
+    <div class="month-picker" id="month-picker">
+      <div class="month-picker__pill month-picker__pill--static" id="month-display">
+        <span class="month-picker__label" id="month-label">—</span>
+      </div>
+    </div>
+
+    <!-- MAIN REPORT -->
+    <main class="main-panel">
+      <div class="main-panel__inner" id="report-content">
+        <p class="empty-state">Loading report…</p>
+      </div>
+    </main>
+
+    <footer class="site-footer"></footer>
+  </div>
+
+  <script src="data-store.js"></script>
+  <script>
+  (() => {
+    'use strict';
+
+    // ─── HELPERS ──────────────────────────────────────────────────────────────
+    const fmt = n => {
+      const num = Math.round(Number(n) * 100) / 100;
+      const hasPence = !Number.isInteger(num);
+      return (
+        '£' +
+        num.toLocaleString('en-GB', {
+          minimumFractionDigits: hasPence ? 2 : 0,
+          maximumFractionDigits: hasPence ? 2 : 0,
+        })
+      );
+    };
+
+    function monthLabel(key) {
+      const [y, m] = key.split('-');
+      return new Date(+y, +m - 1, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+    }
+
+    function findRecipient(data, id) {
+      return (data.recipients || []).find(r => r.id === id);
+    }
+
+    function recipientName(data, id) {
+      return findRecipient(data, id)?.name || '[Removed]';
+    }
+
+    function isDonorHidden(month, donorId) {
+      return (month.hiddenDonors || []).includes(donorId);
+    }
+
+    function countPaidDonors(month) {
+      return (month.donations || []).filter(
+        d => !isDonorHidden(month, d.donorId) && Number(d.amount) > 0
+      ).length;
+    }
+
+    // ─── DOM REFS ─────────────────────────────────────────────────────────────
+    const reservesEl  = document.getElementById('reserves-value');
+    const monthLabel_ = document.getElementById('month-label');
+    const reportEl    = document.getElementById('report-content');
+
+    function getLatestMonthKey(data) {
+      const keys = Object.keys(data.months || {}).sort();
+      return keys.length ? keys[keys.length - 1] : null;
+    }
+
+    function updateMonthDisplay(key) {
+      monthLabel_.textContent = key ? monthLabel(key) : '—';
+    }
+
+    // ─── RENDER REPORT ────────────────────────────────────────────────────────
+    function renderReport(key) {
+      const data = getData();
+      const monthData = (data.months || {})[key];
+
+      // Update header reserves
+      reservesEl.textContent = fmt(data.reserves ?? 0);
+
+      if (!monthData) {
+        reportEl.innerHTML = `<p class="empty-state">No report for ${monthLabel(key)}.</p>`;
+        return;
+      }
+
+      const distributions = monthData.distributions || [];
+      const notes         = monthData.notes || [];
+
+      // "This month" = total sent to recipients
+      const thisMonth = distributions.reduce((s, d) => s + Number(d.amount), 0);
+
+      const paidDonorCount = countPaidDonors(monthData);
+
+      // "Total raised" = sum of all donor contributions across all months
+      const totalRaised = Object.values(data.months || {})
+        .flatMap(m => m.donations || [])
+        .reduce((s, d) => s + Number(d.amount), 0);
+
+      // Build family rows from distributions
+      const rowsHTML = distributions.length
+        ? distributions.map(d => `
+            <li class="donation-row">
+              <div class="donation-row__info">
+                <p class="donation-row__name">${escHtml(recipientName(data, d.recipientId))}</p>
+              </div>
+              <div class="donation-row__amount">${fmt(d.amount)}</div>
+            </li>`).join('')
+        : `<li class="donation-list__empty">No distributions recorded</li>`;
+
+      // Build notes
+      const notesHTML = notes.length ? `
+        <section class="notes-section" aria-label="Notes">
+          <div class="card notes-card">
+            <h2 class="notes-card__header">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <rect x="2" y="1" width="9" height="12" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M11 4h2a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M5 5h4M5 7.5h4M5 10h2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+              </svg>
+              Notes
+            </h2>
+            <ul class="notes-card__list">
+              ${notes.map(n => `<li>${escHtml(n)}</li>`).join('')}
+            </ul>
+          </div>
+        </section>` : '';
+
+      reportEl.innerHTML = `
+        <div class="report-layout${notes.length ? ' report-layout--has-notes' : ''}">
+          <div class="stat-grid">
+            <div class="card stat-card">
+              <p class="stat-card__label">Total raised</p>
+              <p class="stat-card__value">${fmt(totalRaised)}</p>
+            </div>
+            <div class="card stat-card">
+              <p class="stat-card__label">Donors</p>
+              <p class="stat-card__value">${paidDonorCount}</p>
+            </div>
+            <div class="card stat-card">
+              <p class="stat-card__label">This month</p>
+              <p class="stat-card__value">${fmt(thisMonth)}</p>
+            </div>
+          </div>
+          <ul class="donation-list" aria-label="Donations this month">
+            ${rowsHTML}
+          </ul>
+          ${notesHTML}
+        </div>`;
+
+      // Animate in
+      reportEl.classList.remove('public-month-enter');
+      void reportEl.offsetWidth;
+      reportEl.classList.add('public-month-enter');
+    }
+
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ─── INIT ─────────────────────────────────────────────────────────────────
+    let currentMonthKey = null;
+
+    function refreshPublicView() {
+      const data = getData();
+      const key = currentMonthKey || getLatestMonthKey(data);
+      currentMonthKey = key;
+      updateMonthDisplay(key);
+      if (key) renderReport(key);
+      else reportEl.innerHTML = '<p class="empty-state">No report available yet.</p>';
+    }
+
+    setDataChangeHandler(() => {
+      if (!isDataReady()) return;
+      refreshPublicView();
+    });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'visible') return;
+      loadData({ background: true }).catch(() => {});
+    });
+
+    (async () => {
+      try {
+        await loadData();
+        refreshPublicView();
+      } catch (e) {
+        reportEl.innerHTML =
+          '<p class="empty-state">Unable to load reports. Check that the site is deployed on Vercel with JSONBin environment variables configured.</p>';
+      }
+    })();
+
+  })();
+  </script>
+</body>
+</html>
