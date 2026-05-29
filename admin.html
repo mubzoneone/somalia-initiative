@@ -82,7 +82,8 @@
     box-shadow: none;
   }
 
-  .month-select__chevron {
+  .month-select__chevron,
+  .people-archived__chevron {
     background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 7L11 1' stroke='%238E8E93' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   }
 
@@ -523,6 +524,10 @@ body {
 }
 
 .people-archived summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
   padding: 0.55rem 0.85rem;
   font-size: 0.78rem;
   font-weight: 700;
@@ -532,6 +537,21 @@ body {
 }
 
 .people-archived summary::-webkit-details-marker { display: none; }
+
+.people-archived__chevron {
+  flex-shrink: 0;
+  width: 12px;
+  height: 8px;
+  background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 7L11 1' stroke='%236b7685' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-size: contain;
+  background-position: center;
+  transition: transform .15s;
+}
+
+.people-archived[open] .people-archived__chevron {
+  transform: rotate(180deg);
+}
 
 .list-row--archived {
   display: flex;
@@ -2013,9 +2033,25 @@ function recipientsForPills(data, selectedId) {
 function isPersonReferencedInReports(data, kind, id) {
   const listKey = kind === 'donor' ? 'donations' : 'distributions';
   const idField = kind === 'donor' ? 'donorId' : 'recipientId';
-  return Object.values(data.months || {}).some(month =>
-    (month[listKey] || []).some(row => row[idField] === id)
-  );
+  return Object.values(data.months || {}).some(month => {
+    const hasRow = (month[listKey] || []).some(row => row[idField] === id);
+    return hasRow && !isPersonHidden(month, kind, id);
+  });
+}
+
+function purgePersonFromAllMonths(data, kind, id) {
+  const listKey = kind === 'donor' ? 'donations' : 'distributions';
+  const idField = kind === 'donor' ? 'donorId' : 'recipientId';
+  const hiddenKey = kind === 'donor' ? 'hiddenDonors' : 'hiddenRecipients';
+  Object.values(data.months || {}).forEach(month => {
+    if (month[listKey]) {
+      month[listKey] = month[listKey].filter(row => row[idField] !== id);
+    }
+    ensureMonthHidden(month);
+    const hidden = month[hiddenKey];
+    const hi = hidden.indexOf(id);
+    if (hi !== -1) hidden.splice(hi, 1);
+  });
 }
 
 function archiveOrRemovePerson(data, type, id) {
@@ -2026,6 +2062,7 @@ function archiveOrRemovePerson(data, type, id) {
   if (isPersonReferencedInReports(data, kind, id)) {
     person.archived = true;
   } else {
+    purgePersonFromAllMonths(data, kind, id);
     const i = list.indexOf(person);
     if (i !== -1) list.splice(i, 1);
   }
@@ -2038,12 +2075,12 @@ function deletePeopleConfirmMessage(data, type, ids) {
   const n = idList.length;
   if (n === 1) {
     if (anyReferenced) {
-      return 'They\u2019ll be removed from the People list. Their name will stay on past reports.';
+      return 'They\u2019ll be archived. Their name will stay on past reports.';
     }
     return 'They\u2019ll be removed completely. They aren\u2019t on any reports.';
   }
   if (anyReferenced) {
-    return `${n} people will be removed from the People list. Names will stay on past reports where they appear.`;
+    return `${n} people will be archived. Names will stay on past reports where they appear.`;
   }
   return `${n} people will be removed completely. None appear on any reports.`;
 }
@@ -2442,7 +2479,7 @@ function peopleListRowHtml(person, type) {
         <div class="list-row__actions">
           ${rowMenuHtml([
             { label: 'Rename', onClick: `editPerson('${type}','${person.id}')` },
-            { label: 'Remove from directory', danger: true, onClick: `deletePerson('${type}','${person.id}')` },
+            { label: 'Archive', danger: true, onClick: `deletePerson('${type}','${person.id}')` },
           ])}
         </div>
       </div>
@@ -2459,10 +2496,12 @@ function archivedPeopleRowHtml(person, type) {
 
 function archivedPeopleSectionHtml(people, type) {
   if (!people.length) return '';
-  const label = type === 'donor' ? 'donor' : 'recipient';
   return `
     <details class="people-archived">
-      <summary>Removed (${people.length})</summary>
+      <summary class="people-archived__summary">
+        <span>Archived (${people.length})</span>
+        <span class="people-archived__chevron" aria-hidden="true"></span>
+      </summary>
       ${people.map(p => archivedPeopleRowHtml(p, type)).join('')}
     </details>`;
 }
@@ -2632,7 +2671,7 @@ window.editPerson = function(type, id) {
     },
     {
       onDelete: () => { closeModal(); deletePerson(type, id); },
-      deleteLabel: 'Remove from directory',
+      deleteLabel: 'Archive',
     }
   );
   setTimeout(() => { const i = document.getElementById('inp-pname'); if(i){i.focus();i.select();} }, 80);
@@ -2654,7 +2693,7 @@ window.deletePerson = function(type, id) {
   const person = list.find(p => p.id === id);
   const name = person?.name || 'this person';
   openConfirm(
-    `Remove ${name}?`,
+    `Archive ${name}?`,
     deletePeopleConfirmMessage(data, type, new Set([id])),
     () => {
       const d = getData();
@@ -2662,7 +2701,7 @@ window.deletePerson = function(type, id) {
       saveData(d); renderPeople();
     },
     true,
-    'Remove'
+    'Archive'
   );
 };
 
