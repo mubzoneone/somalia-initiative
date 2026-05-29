@@ -1252,6 +1252,8 @@ body {
 }
 
 /* ── PASSCODE SCREEN ──────────────────────────────────────────────────────── */
+body.passcode-locked { overflow: hidden; }
+
 .passcode-screen {
   position: fixed;
   inset: 0;
@@ -1260,17 +1262,16 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.35s ease, transform 0.35s ease;
+  transition: background-color 0.55s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 @media (prefers-color-scheme: dark) {
   .passcode-screen { background: #1a3a5c; }
 }
 
-.passcode-screen.is-hidden {
-  opacity: 0;
+.passcode-screen.is-unlocking {
+  background: transparent;
   pointer-events: none;
-  transform: scale(1.05);
 }
 
 .passcode-wrap {
@@ -1280,7 +1281,14 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1.75rem;
+  gap: 1.25rem;
+  transition: opacity 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.passcode-screen.is-unlocking .passcode-wrap {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 
 .passcode-brand {
@@ -1303,38 +1311,6 @@ body {
   color: rgba(255,255,255,0.8);
   letter-spacing: 0.14em;
   text-transform: uppercase;
-}
-
-.passcode-indicator {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.85rem;
-}
-
-.passcode-dots {
-  display: flex;
-  gap: 1.1rem;
-}
-
-.passcode-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 2px solid rgba(255,255,255,0.55);
-  background: transparent;
-  transition: background 0.15s, border-color 0.15s, transform 0.15s;
-}
-
-.passcode-dot.is-filled {
-  background: #fff;
-  border-color: #fff;
-  transform: scale(1.1);
-}
-
-.passcode-dot.is-error {
-  background: #ff7b74;
-  border-color: #ff7b74;
 }
 
 .passcode-hint {
@@ -1388,6 +1364,11 @@ body {
   background: rgba(255,255,255,0.14);
 }
 
+.passcode-input.is-error {
+  border-color: #ff7b74;
+  box-shadow: 0 0 0 4px rgba(255, 123, 116, 0.22);
+}
+
 @keyframes passcodeShake {
   0%,100% { transform: translateX(0); }
   14%     { transform: translateX(-9px); }
@@ -1398,7 +1379,7 @@ body {
   85%     { transform: translateX(2px); }
 }
 
-.passcode-dots.is-shaking {
+.passcode-input.is-shaking {
   animation: passcodeShake 0.52s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
   </style>
@@ -1415,17 +1396,8 @@ body {
       <p class="passcode-brand__label">Admin</p>
     </div>
 
-    <div class="passcode-indicator">
-      <div class="passcode-dots" id="passcode-dots" aria-hidden="true">
-        <span class="passcode-dot"></span>
-        <span class="passcode-dot"></span>
-        <span class="passcode-dot"></span>
-        <span class="passcode-dot"></span>
-      </div>
-      <p class="passcode-hint" id="passcode-hint">Enter passcode</p>
-    </div>
-
     <div class="passcode-entry">
+      <p class="passcode-hint" id="passcode-hint">Enter passcode</p>
       <input
         class="passcode-input"
         id="passcode-input"
@@ -1579,55 +1551,54 @@ body {
   'use strict';
 
   const REMEMBER_KEY = 'si_admin_remembered';
+  const UNLOCK_MS = 550;
 
   const screen        = document.getElementById('passcode-screen');
-  const dotsContainer = document.getElementById('passcode-dots');
   const hint          = document.getElementById('passcode-hint');
   const inputEl       = document.getElementById('passcode-input');
-  const dots          = Array.from(dotsContainer.querySelectorAll('.passcode-dot'));
   const AUTH_LOGOUT_URL = '/api/logout';
 
   let input  = '';
   let locked = false;
 
+  if (screen) document.body.classList.add('passcode-locked');
+
   function notifyReady() {
     window.dispatchEvent(new Event('si-admin-ready'));
   }
 
-  function updateDots() {
-    dots.forEach(function (dot, i) {
-      dot.classList.toggle('is-filled', i < input.length);
-      dot.classList.remove('is-error');
-    });
+  function clearPasscodeLock() {
+    document.body.classList.remove('passcode-locked');
   }
 
   function shake() {
+    if (!inputEl) return;
     locked = true;
-    dots.forEach(function (d) { d.classList.remove('is-filled'); d.classList.add('is-error'); });
     hint.textContent = 'Incorrect passcode';
     hint.classList.add('is-error');
-    dotsContainer.classList.remove('is-shaking');
-    void dotsContainer.offsetWidth;
-    dotsContainer.classList.add('is-shaking');
+    inputEl.classList.add('is-error');
+    inputEl.classList.remove('is-shaking');
+    void inputEl.offsetWidth;
+    inputEl.classList.add('is-shaking');
     setTimeout(function () {
       input = '';
-      if (inputEl) inputEl.value = '';
-      updateDots();
+      inputEl.value = '';
       hint.textContent = 'Enter passcode';
       hint.classList.remove('is-error');
-      dotsContainer.classList.remove('is-shaking');
+      inputEl.classList.remove('is-error', 'is-shaking');
       locked = false;
-      if (inputEl) inputEl.focus();
+      inputEl.focus();
     }, 900);
   }
 
   function unlock() {
     try { localStorage.setItem(REMEMBER_KEY, '1'); } catch { /* ignore */ }
-    screen.classList.add('is-hidden');
+    notifyReady();
+    screen.classList.add('is-unlocking');
     setTimeout(function () {
       screen.remove();
-      notifyReady();
-    }, 380);
+      clearPasscodeLock();
+    }, UNLOCK_MS);
   }
 
   window.siAdminSignOut = function () {
@@ -1654,7 +1625,7 @@ body {
     function sanitizeAndSync(nextRaw) {
       input = String(nextRaw || '').replace(/\D/g, '').slice(0, 4);
       if (inputEl.value !== input) inputEl.value = input;
-      updateDots();
+      inputEl.classList.remove('is-error');
     }
 
     function attemptVerifyIfReady() {
@@ -1707,6 +1678,7 @@ body {
       .then(function (data) {
         if (data && data.ok) {
           screen.remove();
+          clearPasscodeLock();
           notifyReady();
         } else {
           try { localStorage.removeItem(REMEMBER_KEY); } catch { /* ignore */ }
