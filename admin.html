@@ -219,11 +219,101 @@ body {
   min-width: 0;
 }
 
-.header__nav .row-menu__dropdown {
+.drawer-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  z-index: 9000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .22s ease;
+}
+
+.drawer-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.drawer {
+  position: fixed;
+  top: 0;
   left: 0;
-  right: auto;
-  min-width: 160px;
-  z-index: 200;
+  height: 100dvh;
+  width: min(84vw, 310px);
+  background: var(--surface);
+  border-right: 1.5px solid var(--border);
+  z-index: 9001;
+  transform: translateX(-104%);
+  transition: transform .28s cubic-bezier(0.22,1,0.36,1);
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-md);
+}
+
+.drawer.is-open { transform: translateX(0); }
+
+.drawer__brand {
+  margin: 0;
+  padding: 1.15rem 1rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: var(--text);
+}
+
+.drawer__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0 0.5rem;
+}
+
+.drawer__spacer { flex: 1; min-height: 0.75rem; }
+
+.drawer__bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.5rem;
+  border-top: 1.5px solid var(--border);
+}
+
+.drawer__item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.7rem 0.75rem;
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 650;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+  transition: background .12s, color .12s;
+}
+
+.drawer__item:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.drawer__item--active {
+  background: var(--accent-sub);
+  color: var(--accent);
+  font-weight: 750;
+}
+
+.drawer__item--danger {
+  color: var(--danger);
+}
+.drawer__item--danger:hover {
+  background: var(--danger-sub);
+  color: var(--danger-hover);
 }
 
 .header__actions {
@@ -1261,45 +1351,41 @@ body {
   color: #ffb8b4;
 }
 
-.passcode-keypad {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0.65rem;
+.passcode-entry {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
 }
 
-.passcode-key {
-  aspect-ratio: 1;
-  border-radius: 50%;
-  border: none;
-  background: rgba(255,255,255,0.15);
+.passcode-input {
+  width: 100%;
+  height: 52px;
+  padding: 0 1rem;
+  border-radius: 12px;
+  border: 1.5px solid rgba(255,255,255,0.38);
+  background: rgba(255,255,255,0.12);
   color: #fff;
   font-family: var(--font);
-  font-size: clamp(1.2rem, 5vw, 1.55rem);
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.12s, transform 0.08s;
+  font-size: 1.05rem;
+  font-weight: 650;
+  text-align: center;
+  letter-spacing: 0.22em;
+  outline: none;
+  transition: background .12s, border-color .12s, box-shadow .12s;
   -webkit-tap-highlight-color: transparent;
-  user-select: none;
-  touch-action: manipulation;
 }
 
-.passcode-key:hover  { background: rgba(255,255,255,0.24); }
-.passcode-key:active { transform: scale(0.91); background: rgba(255,255,255,0.35); }
-
-.passcode-key--empty {
-  background: transparent !important;
-  pointer-events: none;
-  cursor: default;
-  transform: none !important;
+.passcode-input::placeholder {
+  color: rgba(255,255,255,0.55);
+  letter-spacing: 0.08em;
+  font-weight: 650;
 }
 
-.passcode-key--backspace {
-  background: rgba(255,255,255,0.10);
-  color: rgba(255,255,255,0.8);
+.passcode-input:focus {
+  border-color: rgba(255,255,255,0.75);
+  box-shadow: 0 0 0 4px rgba(255,255,255,0.18);
+  background: rgba(255,255,255,0.14);
 }
 
 @keyframes passcodeShake {
@@ -1339,30 +1425,41 @@ body {
       <p class="passcode-hint" id="passcode-hint">Enter passcode</p>
     </div>
 
-    <div class="passcode-keypad" id="passcode-keypad" role="group" aria-label="Numeric keypad">
-      <button type="button" class="passcode-key" data-digit="1" aria-label="1">1</button>
-      <button type="button" class="passcode-key" data-digit="2" aria-label="2">2</button>
-      <button type="button" class="passcode-key" data-digit="3" aria-label="3">3</button>
-      <button type="button" class="passcode-key" data-digit="4" aria-label="4">4</button>
-      <button type="button" class="passcode-key" data-digit="5" aria-label="5">5</button>
-      <button type="button" class="passcode-key" data-digit="6" aria-label="6">6</button>
-      <button type="button" class="passcode-key" data-digit="7" aria-label="7">7</button>
-      <button type="button" class="passcode-key" data-digit="8" aria-label="8">8</button>
-      <button type="button" class="passcode-key" data-digit="9" aria-label="9">9</button>
-      <div  class="passcode-key passcode-key--empty" aria-hidden="true"></div>
-      <button type="button" class="passcode-key" data-digit="0" aria-label="0">0</button>
-      <button type="button" class="passcode-key passcode-key--backspace" id="passcode-back" aria-label="Delete last digit">
-        <svg width="22" height="16" viewBox="0 0 22 16" fill="none" aria-hidden="true">
-          <path d="M8.5 1.5H20a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H8.5L1.5 8l7-6.5Z" stroke="currentColor" stroke-width="1.65"/>
-          <path d="M14 5.5 9.5 10.5M9.5 5.5 14 10.5" stroke="currentColor" stroke-width="1.65" stroke-linecap="round"/>
-        </svg>
-      </button>
+    <div class="passcode-entry">
+      <input
+        class="passcode-input"
+        id="passcode-input"
+        type="password"
+        inputmode="numeric"
+        autocomplete="one-time-code"
+        pattern="[0-9]*"
+        maxlength="4"
+        enterkeyhint="done"
+        placeholder="••••"
+        aria-label="4-digit passcode"
+      >
     </div>
 
   </div>
 </div>
 
 <div class="shell">
+
+  <!-- MOBILE DRAWER -->
+  <div class="drawer-overlay" id="mobile-drawer-overlay" aria-hidden="true"></div>
+  <aside class="drawer" id="mobile-drawer" aria-label="Admin navigation drawer" aria-hidden="true">
+    <p class="drawer__brand">Somalia Initiative</p>
+    <nav class="drawer__nav" aria-label="Admin sections">
+      <button type="button" class="drawer__item drawer__item--active" data-panel="months" onclick="selectNavPanel('months');closeMobileDrawer()">Reports</button>
+      <button type="button" class="drawer__item" data-panel="overview" onclick="selectNavPanel('overview');closeMobileDrawer()">Overview</button>
+      <button type="button" class="drawer__item" data-panel="people" onclick="selectNavPanel('people');closeMobileDrawer()">People</button>
+    </nav>
+    <div class="drawer__spacer" aria-hidden="true"></div>
+    <div class="drawer__bottom" aria-label="Account actions">
+      <a href="index.html" class="drawer__item" onclick="closeMobileDrawer()">Public site</a>
+      <button type="button" class="drawer__item drawer__item--danger" onclick="closeMobileDrawer();siAdminSignOut()">Sign out</button>
+    </div>
+  </aside>
 
   <aside class="sidebar" aria-label="Admin navigation">
     <p class="sidebar__brand">Somalia Initiative</p>
@@ -1378,22 +1475,17 @@ body {
 
   <!-- HEADER -->
   <header class="header">
-    <div class="header__nav row-menu row-menu--drop-down" id="header-nav">
+    <div class="header__nav" id="header-nav">
       <button type="button" class="icon-btn" id="header-nav-btn" aria-label="Open menu" aria-haspopup="true" aria-expanded="false" onclick="toggleHeaderNav(this, event)">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true"><path d="M2.5 4.5h13M2.5 9h13M2.5 13.5h13" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
       </button>
-      <div class="row-menu__dropdown" role="menu">
-        <button type="button" class="row-menu__item row-menu__item--active" role="menuitem" data-panel="months" onclick="selectNavPanel('months')">Reports</button>
-        <button type="button" class="row-menu__item" role="menuitem" data-panel="overview" onclick="selectNavPanel('overview')">Overview</button>
-        <button type="button" class="row-menu__item" role="menuitem" data-panel="people" onclick="selectNavPanel('people')">People</button>
-        <a href="index.html" class="row-menu__item row-menu__item--link" role="menuitem" onclick="closeRowMenus()">Public</a>
-      </div>
     </div>
     <h1 class="header__title" id="header-page-title">Reports</h1>
     <span class="header__save-status" id="save-status" hidden aria-live="polite"></span>
     <div class="header__spacer" aria-hidden="true"></div>
     <div class="header__actions" id="header-month-actions">
       <div id="month-head-menu"></div>
+      <div id="admin-user-menu"></div>
       <button class="btn btn--primary btn--sm btn--pill" id="btn-new-month">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
         New
@@ -1486,15 +1578,16 @@ body {
 (function () {
   'use strict';
 
-  const SESSION_KEY = 'si_admin_auth';
+  const REMEMBER_KEY = 'si_admin_remembered';
 
   const screen        = document.getElementById('passcode-screen');
   const dotsContainer = document.getElementById('passcode-dots');
   const hint          = document.getElementById('passcode-hint');
-  const keypad        = document.getElementById('passcode-keypad');
+  const inputEl       = document.getElementById('passcode-input');
   const dots          = Array.from(dotsContainer.querySelectorAll('.passcode-dot'));
+  const AUTH_LOGOUT_URL = '/api/logout';
 
-  let input  = [];
+  let input  = '';
   let locked = false;
 
   function notifyReady() {
@@ -1517,23 +1610,34 @@ body {
     void dotsContainer.offsetWidth;
     dotsContainer.classList.add('is-shaking');
     setTimeout(function () {
-      input = [];
+      input = '';
+      if (inputEl) inputEl.value = '';
       updateDots();
       hint.textContent = 'Enter passcode';
       hint.classList.remove('is-error');
       dotsContainer.classList.remove('is-shaking');
       locked = false;
+      if (inputEl) inputEl.focus();
     }, 900);
   }
 
   function unlock() {
-    sessionStorage.setItem(SESSION_KEY, '1');
+    try { localStorage.setItem(REMEMBER_KEY, '1'); } catch { /* ignore */ }
     screen.classList.add('is-hidden');
     setTimeout(function () {
       screen.remove();
       notifyReady();
     }, 380);
   }
+
+  window.siAdminSignOut = function () {
+    try { localStorage.removeItem(REMEMBER_KEY); } catch { /* ignore */ }
+    fetch(AUTH_LOGOUT_URL, { method: 'POST', credentials: 'include' })
+      .catch(function () {})
+      .finally(function () {
+        window.location.reload();
+      });
+  };
 
   function verifyPasscode(code) {
     return fetch('/api/auth', {
@@ -1544,14 +1648,21 @@ body {
     }).then(function (res) { return res.ok; });
   }
 
-  function pressDigit(d) {
-    if (locked || input.length >= 4) return;
-    input.push(d);
-    updateDots();
-    if (input.length === 4) {
+  function setupPasscodeUI() {
+    if (!inputEl) return;
+
+    function sanitizeAndSync(nextRaw) {
+      input = String(nextRaw || '').replace(/\D/g, '').slice(0, 4);
+      if (inputEl.value !== input) inputEl.value = input;
+      updateDots();
+    }
+
+    function attemptVerifyIfReady() {
+      if (locked) return;
+      if (input.length !== 4) return;
       locked = true;
       setTimeout(function () {
-        verifyPasscode(input.join(''))
+        verifyPasscode(input)
           .then(function (ok) {
             if (ok) { unlock(); }
             else { locked = false; shake(); }
@@ -1562,31 +1673,31 @@ body {
           });
       }, 110);
     }
-  }
 
-  function pressBackspace() {
-    if (locked || input.length === 0) return;
-    input.pop();
-    updateDots();
-  }
-
-  function setupPasscodeUI() {
-    keypad.addEventListener('click', function (e) {
-      var key = e.target.closest('.passcode-key');
-      if (!key || key.classList.contains('passcode-key--empty')) return;
-      if (key.id === 'passcode-back') { pressBackspace(); }
-      else if (key.dataset.digit !== undefined) { pressDigit(key.dataset.digit); }
-    });
-
-    document.addEventListener('keydown', function (e) {
+    inputEl.addEventListener('input', function () {
       if (!screen.isConnected) return;
-      if (e.key >= '0' && e.key <= '9') { e.preventDefault(); pressDigit(e.key); }
-      else if (e.key === 'Backspace') { e.preventDefault(); pressBackspace(); }
+      sanitizeAndSync(inputEl.value);
+      attemptVerifyIfReady();
     });
+
+    inputEl.addEventListener('keydown', function (e) {
+      if (!screen.isConnected) return;
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sanitizeAndSync(inputEl.value);
+        attemptVerifyIfReady();
+      }
+    });
+
+    sanitizeAndSync(inputEl.value);
+    setTimeout(function () { if (inputEl) inputEl.focus(); }, 60);
   }
 
   function tryResumeSession() {
-    if (sessionStorage.getItem(SESSION_KEY) !== '1') {
+    var remembered = false;
+    try { remembered = localStorage.getItem(REMEMBER_KEY) === '1'; } catch { remembered = false; }
+
+    if (!remembered) {
       setupPasscodeUI();
       return;
     }
@@ -1598,12 +1709,12 @@ body {
           screen.remove();
           notifyReady();
         } else {
-          sessionStorage.removeItem(SESSION_KEY);
+          try { localStorage.removeItem(REMEMBER_KEY); } catch { /* ignore */ }
           setupPasscodeUI();
         }
       })
       .catch(function () {
-        sessionStorage.removeItem(SESSION_KEY);
+        try { localStorage.removeItem(REMEMBER_KEY); } catch { /* ignore */ }
         setupPasscodeUI();
       });
   }
@@ -1914,6 +2025,14 @@ function rowMenuHtml(items, opts = {}) {
     </div>`;
 }
 
+function renderAdminUserMenu() {
+  const el = document.getElementById('admin-user-menu');
+  if (!el) return;
+  el.innerHTML = rowMenuHtml([
+    { label: 'Sign out', danger: true, onClick: 'siAdminSignOut()' },
+  ], { dropDown: true });
+}
+
 window.toggleRowMenu = function(btn, e) {
   e.stopPropagation();
   const menu = btn.closest('.row-menu');
@@ -1933,15 +2052,47 @@ window.closeRowMenus = function() {
   });
 };
 
+function mobileDrawerEls() {
+  return {
+    overlay: document.getElementById('mobile-drawer-overlay'),
+    drawer: document.getElementById('mobile-drawer'),
+    btn: document.getElementById('header-nav-btn'),
+  };
+}
+
+function isMobileDrawerOpen() {
+  const { drawer } = mobileDrawerEls();
+  return !!drawer && drawer.classList.contains('is-open');
+}
+
+window.openMobileDrawer = function () {
+  const { overlay, drawer, btn } = mobileDrawerEls();
+  if (!overlay || !drawer) return;
+  closeRowMenus();
+  overlay.classList.add('is-open');
+  drawer.classList.add('is-open');
+  overlay.setAttribute('aria-hidden', 'false');
+  drawer.setAttribute('aria-hidden', 'false');
+  if (btn) btn.setAttribute('aria-expanded', 'true');
+  document.body.style.overflow = 'hidden';
+};
+
+window.closeMobileDrawer = function () {
+  const { overlay, drawer, btn } = mobileDrawerEls();
+  if (!overlay || !drawer) return;
+  overlay.classList.remove('is-open');
+  drawer.classList.remove('is-open');
+  overlay.setAttribute('aria-hidden', 'true');
+  drawer.setAttribute('aria-hidden', 'true');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+  document.body.style.overflow = '';
+};
+
 window.toggleHeaderNav = function(btn, e) {
   e.stopPropagation();
-  const menu = btn.closest('.row-menu');
-  const wasOpen = menu.classList.contains('is-open');
-  closeRowMenus();
-  if (!wasOpen) {
-    menu.classList.add('is-open');
-    btn.setAttribute('aria-expanded', 'true');
-  }
+  const wasOpen = isMobileDrawerOpen();
+  if (wasOpen) closeMobileDrawer();
+  else openMobileDrawer();
 };
 
 window.selectNavPanel = function(name) {
@@ -1952,6 +2103,14 @@ window.selectNavPanel = function(name) {
 document.addEventListener('click', e => {
   if (!e.target.closest('.row-menu')) closeRowMenus();
 });
+
+(() => {
+  const { overlay } = mobileDrawerEls();
+  if (overlay) overlay.addEventListener('click', () => closeMobileDrawer());
+  window.addEventListener('resize', () => {
+    if (window.matchMedia('(min-width: 900px)').matches) closeMobileDrawer();
+  });
+})();
 
 function monthListRowHtml(displayName, amount, kind, editFn) {
   return `
@@ -1996,6 +2155,7 @@ function updateHeaderActions() {
   const monthActs = document.getElementById('header-month-actions');
   if (monthActs) monthActs.hidden = !isMonths;
   if (isMonths) renderMonthHeadMenu();
+  renderAdminUserMenu();
 }
 
 function switchTab(name) {
@@ -2004,6 +2164,9 @@ function switchTab(name) {
   document.getElementById('panel-' + name).classList.remove('hidden');
   document.querySelectorAll('#header-nav [data-panel]').forEach(btn => {
     btn.classList.toggle('row-menu__item--active', btn.dataset.panel === name);
+  });
+  document.querySelectorAll('#mobile-drawer [data-panel]').forEach(btn => {
+    btn.classList.toggle('drawer__item--active', btn.dataset.panel === name);
   });
   document.querySelectorAll('.sidebar [data-panel]').forEach(btn => {
     btn.classList.toggle('sidebar__item--active', btn.dataset.panel === name);
@@ -2588,6 +2751,7 @@ overlay.addEventListener('click', e => { if (e.target === overlay) closeModal();
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     if (overlay.classList.contains('overlay--open')) closeModal();
+    else if (isMobileDrawerOpen()) closeMobileDrawer();
     else closeRowMenus();
   }
 });
