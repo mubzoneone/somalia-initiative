@@ -412,158 +412,6 @@ body {
   flex-shrink: 0;
 }
 
-.section-head__manage-list {
-  margin-left: auto;
-  flex-shrink: 0;
-  font-family: var(--font);
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--accent);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.25rem 0.4rem;
-  border-radius: var(--radius);
-  transition: background .12s;
-  white-space: nowrap;
-}
-
-.section-head__manage-list:hover {
-  background: var(--accent-sub);
-}
-
-.section-head__meta {
-  font-size: 0.78rem;
-  color: var(--muted);
-  margin: -0.35rem 0 0.5rem;
-  padding: 0 0.85rem;
-  line-height: 1.4;
-}
-
-.panel-intro {
-  font-size: 0.85rem;
-  color: var(--muted);
-  line-height: 1.5;
-  margin: 0 0 0.85rem;
-  grid-column: 1 / -1;
-}
-
-.list-row--amount {
-  cursor: default;
-  padding: 0;
-}
-
-.list-row--amount:hover {
-  background: var(--surface-hover);
-}
-
-.list-row--amount > .list-row__body {
-  padding: 0.7rem 0.85rem;
-  align-self: stretch;
-  width: 100%;
-  box-sizing: border-box;
-  min-height: 44px;
-}
-
-.report-amount-input-wrap {
-  display: flex;
-  align-items: center;
-  flex-shrink: 0;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--bg);
-  overflow: hidden;
-  min-width: 88px;
-}
-
-.report-amount-input__prefix {
-  padding: 0.4rem 0.45rem 0.4rem 0.55rem;
-  font-size: 0.85rem;
-  font-weight: 700;
-  color: var(--muted);
-  background: var(--surface-hover);
-  border-right: 1.5px solid var(--border);
-}
-
-.report-amount-input {
-  width: 4.5rem;
-  border: none;
-  background: transparent;
-  font-family: var(--font);
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--text);
-  padding: 0.4rem 0.5rem;
-  text-align: right;
-  -moz-appearance: textfield;
-}
-
-.report-amount-input:focus {
-  outline: none;
-  background: var(--surface);
-}
-
-.report-amount-input::-webkit-outer-spin-button,
-.report-amount-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.add-row__input {
-  flex: 1;
-  min-width: 0;
-  font-size: 0.9rem;
-  padding: 0.45rem 0.65rem;
-}
-
-.people-archived {
-  border-top: 1.5px solid var(--border);
-}
-
-.people-archived summary {
-  padding: 0.55rem 0.85rem;
-  font-size: 0.78rem;
-  font-weight: 700;
-  color: var(--muted);
-  cursor: pointer;
-  list-style: none;
-}
-
-.people-archived summary::-webkit-details-marker { display: none; }
-
-.list-row--archived {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
-  padding: 0.55rem 0.85rem;
-  border-bottom: 1px solid var(--border);
-}
-
-.list-row--archived .list-row__name {
-  font-weight: 500;
-  color: var(--muted);
-}
-
-.list-row--people {
-  padding: 0;
-}
-
-.list-row--people > .list-row__body {
-  padding: 0.7rem 0.85rem;
-  align-self: stretch;
-  width: 100%;
-  box-sizing: border-box;
-  min-height: 44px;
-  justify-content: space-between;
-}
-
-.header-report-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
 .manage-roster-note {
   font-size: 0.82rem;
   color: var(--muted);
@@ -1378,19 +1226,6 @@ body {
     gap: 0.65rem;
   }
 
-  .list-row--amount > .list-row__body {
-    display: grid;
-    grid-template-columns: 1fr auto;
-    align-items: center;
-    gap: 0.75rem;
-  }
-
-  .list-row--amount .list-row__main {
-    flex-direction: row;
-    align-items: center;
-    gap: 0.65rem;
-  }
-
   .overlay {
     align-items: center;
     padding: 1.5rem;
@@ -1708,28 +1543,24 @@ html.si-admin-auth-pending .passcode-brand {
     <!-- PEOPLE PANEL -->
     <div class="panel hidden" id="panel-people">
 
-      <p class="panel-intro">People are your master list. Open a report to choose who appears each month and enter amounts.</p>
-
       <div class="card card--menu-overflow" id="donors-card">
         <div class="section-head">
           <h2 class="section-head__title" id="donors-title">Donors</h2>
+          <button type="button" class="section-head__add" id="btn-add-donor" aria-label="Add donor">+ Add</button>
+        </div>
+        <div class="section-note">
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="currentColor" stroke-width="1.4"/><path d="M8 7v4M8 5.5v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Donor names are only visible here in admin
         </div>
         <div id="donors-list"></div>
-        <div class="add-row">
-          <input class="add-row__input field__input people-add-input" id="donor-add-input" type="text" placeholder="Enter name" autocomplete="off" aria-label="New donor name">
-          <button type="button" class="btn btn--primary btn--sm" id="btn-add-donor">Add</button>
-        </div>
       </div>
 
       <div class="card card--menu-overflow" id="recipients-card">
         <div class="section-head">
           <h2 class="section-head__title" id="recipients-title">Recipients</h2>
+          <button type="button" class="section-head__add" id="btn-add-recipient" aria-label="Add recipient">+ Add</button>
         </div>
         <div id="recipients-list"></div>
-        <div class="add-row">
-          <input class="add-row__input field__input people-add-input" id="recipient-add-input" type="text" placeholder="Enter name" autocomplete="off" aria-label="New recipient name">
-          <button type="button" class="btn btn--primary btn--sm" id="btn-add-recipient">Add</button>
-        </div>
       </div>
 
     </div>
@@ -2256,110 +2087,16 @@ function computeStats(data) {
 
 // ── ROW KEBAB MENU ───────────────────────────────────────────────────────────
 const KEBAB_SVG = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="3" r="1.25" fill="currentColor"/><circle cx="7" cy="7" r="1.25" fill="currentColor"/><circle cx="7" cy="11" r="1.25" fill="currentColor"/></svg>';
-function getLatestMonthKey(data) {
-  const keys = Object.keys(data.months || {}).sort().reverse();
-  return keys[0] || null;
-}
+const VISIBILITY_SVG = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M1.5 8s2.5-4.5 6.5-4.5S14.5 8 14.5 8s-2.5 4.5-6.5 4.5S1.5 8 1.5 8z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="8" cy="8" r="2" stroke="currentColor" stroke-width="1.5"/></svg>';
+const CHEVRON_RIGHT_SVG = '<svg width="14" height="14" viewBox="0 0 12 12" fill="none" aria-hidden="true"><path d="M4.5 2.5L8.5 6 4.5 9.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
-function copyMonthRoster(targetMonth, sourceMonth, data) {
-  ensureMonthHidden(targetMonth);
-  if (!targetMonth.donations) targetMonth.donations = [];
-  if (!targetMonth.distributions) targetMonth.distributions = [];
-
-  if (sourceMonth) {
-    targetMonth.hiddenDonors = [...(sourceMonth.hiddenDonors || [])];
-    targetMonth.hiddenRecipients = [...(sourceMonth.hiddenRecipients || [])];
-    targetMonth.donations = (sourceMonth.donations || []).map(d => ({
-      id: genId(),
-      donorId: d.donorId,
-      amount: 0,
-    }));
-    targetMonth.distributions = (sourceMonth.distributions || []).map(d => ({
-      id: genId(),
-      recipientId: d.recipientId,
-      amount: 0,
-    }));
-    return;
-  }
-
-  targetMonth.hiddenDonors = [];
-  targetMonth.hiddenRecipients = [];
-  targetMonth.donations = activeDonors(data).map(d => ({
-    id: genId(),
-    donorId: d.id,
-    amount: 0,
-  }));
-  targetMonth.distributions = activeRecipients(data).map(r => ({
-    id: genId(),
-    recipientId: r.id,
-    amount: 0,
-  }));
-}
-
-function sectionHiddenMeta(month, kind) {
-  const n = kind === 'donors'
-    ? (month.hiddenDonors?.length || 0)
-    : (month.hiddenRecipients?.length || 0);
-  if (!n) return '';
-  const label = n === 1 ? '1 person not on this report' : `${n} people not on this report`;
-  return `<p class="section-head__meta">${label}</p>`;
-}
-
-function sectionHeadManageListBtn(mKey, kind, month) {
-  const isRecipients = kind === 'recipients';
-  const personKind = isRecipients ? 'recipient' : 'donor';
-  const people = isRecipients ? activeRecipients(getData()) : activeDonors(getData());
-  const included = people.filter(p => !isPersonHidden(month, personKind, p.id)).length;
-  return `<button type="button" class="section-head__manage-list" onclick="openMonthRosterManage('${mKey}','${kind}')">Manage list (${included})</button>`;
-}
-
-function refreshMonthSectionTotals(mKey) {
-  const data = getData();
-  const month = data.months[mKey];
-  if (!month) return;
-
-  const visibleDonations = (month.donations || []).filter(d => !isPersonHidden(month, 'donor', d.donorId));
-  const visibleDistributions = (month.distributions || []).filter(d => !isPersonHidden(month, 'recipient', d.recipientId));
-  const totalRaised = sum(visibleDonations.map(d => d.amount));
-  const totalSent = sum(visibleDistributions.map(d => d.amount));
-
-  const donTotal = document.querySelector('#md-donations .list-row--total .list-row__amount');
-  const distTotal = document.querySelector('#md-distributions .list-row--total .list-row__amount');
-  if (donTotal) donTotal.textContent = fmt(totalRaised);
-  if (distTotal) distTotal.textContent = fmt(totalSent);
-}
-
-function saveReportAmountFromInput(input) {
-  const row = input.closest('[data-month-key]');
-  if (!row) return false;
-
-  const mKey = row.dataset.monthKey;
-  const entryId = row.dataset.entryId;
-  const kind = row.dataset.entryKind;
-  const listKey = kind === 'donor' ? 'donations' : 'distributions';
-
-  const amount = parseFloat(input.value);
-  if (isNaN(amount) || amount < 0) {
-    const data = getData();
-    const item = data.months[mKey]?.[listKey]?.find(x => x.id === entryId);
-    input.value = item ? Number(item.amount) || 0 : 0;
-    return false;
-  }
-
-  const d = getData();
-  const item = d.months[mKey]?.[listKey]?.find(x => x.id === entryId);
-  if (!item) return false;
-
-  const normalized = amount;
-  if (item.amount === normalized) return false;
-
-  item.amount = normalized;
-  saveData(d);
-
-  const badgeWrap = row.querySelector('.status-badge-wrap');
-  if (badgeWrap) badgeWrap.innerHTML = rowStatusBadge(normalized, kind);
-  refreshMonthSectionTotals(mKey);
-  return true;
+function sectionHeadManageBtn(mKey, kind, month) {
+  const m = month ?? getData().months[mKey];
+  const hasHidden = hasHiddenPeople(m, kind);
+  const label = kind === 'recipients' ? 'Show or hide recipients' : 'Show or hide donors';
+  const activeClass = hasHidden ? ' section-head__manage--active' : '';
+  const pressed = hasHidden ? ' aria-pressed="true"' : ' aria-pressed="false"';
+  return `<button type="button" class="icon-btn section-head__manage${activeClass}" aria-label="${label}"${pressed} onclick="openMonthRosterManage('${mKey}','${kind}')">${VISIBILITY_SVG}</button>`;
 }
 
 function rowMenuHtml(items, opts = {}) {
@@ -2454,19 +2191,16 @@ document.addEventListener('click', e => {
   });
 })();
 
-function monthAmountRowHtml(mKey, entryId, displayName, amount, kind) {
-  const val = Number(amount) || 0;
+function monthListRowHtml(displayName, amount, kind, editFn) {
   return `
-    <div class="list-row list-row--amount" data-month-key="${esc(mKey)}" data-entry-id="${esc(entryId)}" data-entry-kind="${kind}">
-      <div class="list-row__body">
+    <div class="list-row list-row--selectable list-row--nav">
+      <div class="list-row__body" onclick="${editFn}">
         <div class="list-row__main">
           <div class="list-row__name">${esc(displayName)}</div>
-          <span class="status-badge-wrap">${rowStatusBadge(amount, kind)}</span>
+          ${rowStatusBadge(amount, kind)}
         </div>
-        <div class="report-amount-input-wrap">
-          <span class="report-amount-input__prefix">£</span>
-          <input type="number" class="report-amount-input" min="0" step="0.01" value="${val}" aria-label="Amount for ${esc(displayName)}">
-        </div>
+        <span class="list-row__amount">${fmtAmount(amount)}</span>
+        <span class="list-row__chevron">${CHEVRON_RIGHT_SVG}</span>
       </div>
     </div>`;
 }
@@ -2483,35 +2217,12 @@ function monthListTotalRowHtml(label, total) {
 
 function peopleListRowHtml(person, type) {
   return `
-    <div class="list-row list-row--people">
+    <div class="list-row list-row--selectable list-row--nav" data-person-type="${esc(type)}" data-person-id="${esc(person.id)}" role="button" tabindex="0">
       <div class="list-row__body">
         <span class="list-row__name">${esc(person.name)}</span>
-        <div class="list-row__actions">
-          ${rowMenuHtml([
-            { label: 'Rename', onClick: `editPerson('${type}','${person.id}')` },
-            { label: 'Remove from directory', danger: true, onClick: `deletePerson('${type}','${person.id}')` },
-          ])}
-        </div>
+        <span class="list-row__chevron">${CHEVRON_RIGHT_SVG}</span>
       </div>
     </div>`;
-}
-
-function archivedPeopleRowHtml(person, type) {
-  return `
-    <div class="list-row list-row--archived">
-      <span class="list-row__name">${esc(person.name)}</span>
-      <button type="button" class="btn btn--ghost btn--sm" onclick="restorePerson('${type}','${person.id}')">Restore</button>
-    </div>`;
-}
-
-function archivedPeopleSectionHtml(people, type) {
-  if (!people.length) return '';
-  const label = type === 'donor' ? 'donor' : 'recipient';
-  return `
-    <details class="people-archived">
-      <summary>Removed (${people.length})</summary>
-      ${people.map(p => archivedPeopleRowHtml(p, type)).join('')}
-    </details>`;
 }
 
 // ── NAV / PANELS ─────────────────────────────────────────────────────────────
@@ -2607,28 +2318,25 @@ function peopleSectionTitle(count, singular) {
 
 let _peopleListFingerprint = '';
 
-function addPersonFromInline(type) {
-  const inputId = type === 'donor' ? 'donor-add-input' : 'recipient-add-input';
-  const input = document.getElementById(inputId);
-  if (!input) return;
-  const name = input.value.trim();
-  if (!name) return alert('Please enter a name.');
-  const d = getData();
-  const list = type === 'donor' ? d.donors : d.recipients;
-  list.push({ id: genId(), name });
-  saveData(d);
-  input.value = '';
-  renderPeople();
-  input.focus();
+function handlePeopleListClick(e) {
+  const row = e.target.closest('[data-person-type][data-person-id]');
+  if (!row) return;
+  editPerson(row.dataset.personType, row.dataset.personId);
+}
+
+function handlePeopleListKeydown(e) {
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  const row = e.target.closest('[data-person-type][data-person-id]');
+  if (!row) return;
+  e.preventDefault();
+  editPerson(row.dataset.personType, row.dataset.personId);
 }
 
 function renderPeople() {
   const data = getData();
   const donors = activeDonors(data);
   const recipients = activeRecipients(data);
-  const archivedDonors = (data.donors || []).filter(isPersonArchived);
-  const archivedRecipients = (data.recipients || []).filter(isPersonArchived);
-  const fp = JSON.stringify({ donors, recipients, archivedDonors, archivedRecipients });
+  const fp = JSON.stringify({ donors, recipients });
 
   document.getElementById('donors-title').textContent = peopleSectionTitle(donors.length, 'Donor');
   document.getElementById('recipients-title').textContent = peopleSectionTitle(recipients.length, 'Recipient');
@@ -2639,21 +2347,49 @@ function renderPeople() {
   document.getElementById('donors-list').innerHTML = donors.length
     ? donors.map(d => peopleListRowHtml(d, 'donor')).join('')
     : '<div class="empty-row">No donors yet</div>';
-  document.getElementById('donors-list').insertAdjacentHTML('beforeend', archivedPeopleSectionHtml(archivedDonors, 'donor'));
 
   document.getElementById('recipients-list').innerHTML = recipients.length
     ? recipients.map(r => peopleListRowHtml(r, 'recipient')).join('')
     : '<div class="empty-row">No recipients yet</div>';
-  document.getElementById('recipients-list').insertAdjacentHTML('beforeend', archivedPeopleSectionHtml(archivedRecipients, 'recipient'));
 }
 
-document.getElementById('btn-add-donor').addEventListener('click', () => addPersonFromInline('donor'));
-document.getElementById('btn-add-recipient').addEventListener('click', () => addPersonFromInline('recipient'));
-document.getElementById('donor-add-input')?.addEventListener('keydown', e => {
-  if (e.key === 'Enter') { e.preventDefault(); addPersonFromInline('donor'); }
+document.getElementById('donors-list').addEventListener('click', handlePeopleListClick);
+document.getElementById('recipients-list').addEventListener('click', handlePeopleListClick);
+document.getElementById('donors-list').addEventListener('keydown', handlePeopleListKeydown);
+document.getElementById('recipients-list').addEventListener('keydown', handlePeopleListKeydown);
+
+document.getElementById('btn-add-donor').addEventListener('click', () => {
+  openModal('Add Donor', `
+    <div class="field">
+      <label class="field__label" for="inp-pname">Full Name</label>
+      <input class="field__input" id="inp-pname" type="text" placeholder="Enter name" autocomplete="off">
+    </div>`,
+    () => {
+      const name = document.getElementById('inp-pname').value.trim();
+      if (!name) return alert('Please enter a name.');
+      const d = getData();
+      d.donors.push({ id: genId(), name });
+      saveData(d); renderPeople();
+    }
+  );
+  setTimeout(() => document.getElementById('inp-pname')?.focus(), 80);
 });
-document.getElementById('recipient-add-input')?.addEventListener('keydown', e => {
-  if (e.key === 'Enter') { e.preventDefault(); addPersonFromInline('recipient'); }
+
+document.getElementById('btn-add-recipient').addEventListener('click', () => {
+  openModal('Add Recipient', `
+    <div class="field">
+      <label class="field__label" for="inp-pname">Full Name</label>
+      <input class="field__input" id="inp-pname" type="text" placeholder="Enter name" autocomplete="off">
+    </div>`,
+    () => {
+      const name = document.getElementById('inp-pname').value.trim();
+      if (!name) return alert('Please enter a name.');
+      const d = getData();
+      d.recipients.push({ id: genId(), name });
+      saveData(d); renderPeople();
+    }
+  );
+  setTimeout(() => document.getElementById('inp-pname')?.focus(), 80);
 });
 
 window.editPerson = function(type, id) {
@@ -2679,37 +2415,23 @@ window.editPerson = function(type, id) {
     },
     {
       onDelete: () => { closeModal(); deletePerson(type, id); },
-      deleteLabel: 'Remove from directory',
     }
   );
   setTimeout(() => { const i = document.getElementById('inp-pname'); if(i){i.focus();i.select();} }, 80);
 };
 
-window.restorePerson = function(type, id) {
-  const d = getData();
-  const list = type === 'donor' ? d.donors : d.recipients;
-  const person = list.find(p => p.id === id);
-  if (!person) return;
-  person.archived = false;
-  saveData(d);
-  renderPeople();
-};
-
 window.deletePerson = function(type, id) {
+  const label = type === 'donor' ? 'donor' : 'recipient';
   const data = getData();
-  const list = type === 'donor' ? data.donors : data.recipients;
-  const person = list.find(p => p.id === id);
-  const name = person?.name || 'this person';
   openConfirm(
-    `Remove ${name}?`,
+    `Delete ${label}?`,
     deletePeopleConfirmMessage(data, type, new Set([id])),
     () => {
       const d = getData();
       archiveOrRemovePerson(d, type, id);
       saveData(d); renderPeople();
     },
-    true,
-    'Remove'
+    true
   );
 };
 
@@ -2723,10 +2445,9 @@ function renderMonthHeadMenu() {
     el.innerHTML = '';
     return;
   }
-  el.innerHTML = `
-    <div class="header-report-actions">
-      <button type="button" class="btn btn--ghost btn--sm" onclick="deleteMonth('${activeMonthKey}')">Delete report</button>
-    </div>`;
+  el.innerHTML = rowMenuHtml([
+    { label: 'Delete report', danger: true, onClick: `deleteMonth('${activeMonthKey}')` },
+  ], { dropDown: true });
 }
 
 function updateMonthSelectLabel() {
@@ -2762,37 +2483,39 @@ document.getElementById('month-select').addEventListener('change', e => {
   renderMonthDetail(activeMonthKey);
 });
 
-document.getElementById('month-detail').addEventListener('focusout', e => {
-  if (e.target.classList?.contains('report-amount-input')) {
-    saveReportAmountFromInput(e.target);
-  }
-});
-
-document.getElementById('month-detail').addEventListener('keydown', e => {
-  if (e.key === 'Enter' && e.target.classList?.contains('report-amount-input')) {
-    e.preventDefault();
-    e.target.blur();
-  }
-});
-
 document.getElementById('btn-new-month').addEventListener('click', () => {
   const data = getData();
   const suggested = suggestedNewMonthParts(data);
-  const latestKey = getLatestMonthKey(data);
-  const copyHint = latestKey
-    ? `<p class="manage-roster-note" style="margin:0 0 0.5rem;">People on this report will match <strong>${esc(monthLabel(latestKey))}</strong>. Adjust the list after creating.</p>`
-    : `<p class="manage-roster-note" style="margin:0 0 0.5rem;">All active donors and recipients will be included. Adjust the list after creating.</p>`;
+  const donors = activeDonors(data);
+  const recipients = activeRecipients(data);
   openModal('New Report', `
-    ${copyHint}
     <div class="field">
       <label class="field__label" for="inp-year">Year</label>
       <input class="field__input" id="inp-year" type="number" min="2020" max="2099" value="${suggested.year}">
     </div>
-    <div class="field" style="margin-bottom:0;">
+    <div class="field">
       <label class="field__label" for="inp-month">Month</label>
       <select class="field__select" id="inp-month">
         ${newMonthOptionsHtml(suggested.year, data, suggested.month)}
       </select>
+    </div>
+    <div class="field" style="margin-bottom:0.75rem;">
+      <span class="field__label">Donors</span>
+      <div class="manage-roster-list manage-roster-list--compact">${rosterChecklistHtml(donors, {
+        emptyMessage: 'No donors on the People tab yet.',
+        inputClass: 'new-report-roster-toggle',
+        dataKind: 'donor',
+        ariaVerb: 'Include',
+      })}</div>
+    </div>
+    <div class="field" style="margin-bottom:0;">
+      <span class="field__label">Recipients</span>
+      <div class="manage-roster-list manage-roster-list--compact">${rosterChecklistHtml(recipients, {
+        emptyMessage: 'No recipients on the People tab yet.',
+        inputClass: 'new-report-roster-toggle',
+        dataKind: 'recipient',
+        ariaVerb: 'Include',
+      })}</div>
     </div>`,
     () => {
       const y = document.getElementById('inp-year').value.trim();
@@ -2802,8 +2525,20 @@ document.getElementById('btn-new-month').addEventListener('click', () => {
       const d = getData();
       if (d.months[key]) return alert('That report already exists.');
       const month = { donations: [], distributions: [], notes: [] };
-      const sourceMonth = latestKey ? d.months[latestKey] : null;
-      copyMonthRoster(month, sourceMonth, d);
+      ensureMonthHidden(month);
+
+      document.querySelectorAll('.new-report-roster-toggle').forEach(el => {
+        const personId = el.getAttribute('data-person-id');
+        const kind = el.getAttribute('data-kind');
+        const personKind = kind === 'recipient' ? 'recipient' : 'donor';
+        setPersonHidden(month, personKind, personId, !el.checked);
+        if (!el.checked) return;
+        const isRecipients = personKind === 'recipient';
+        const listKey = isRecipients ? 'distributions' : 'donations';
+        const idField = isRecipients ? 'recipientId' : 'donorId';
+        month[listKey].push({ id: genId(), [idField]: personId, amount: 0 });
+      });
+
       d.months[key] = month;
       saveData(d);
       activeMonthKey = key;
@@ -2822,11 +2557,13 @@ document.getElementById('btn-new-month').addEventListener('click', () => {
 
 function renderMonthDetail(key) {
   const detailEl = document.getElementById('month-detail');
-  if (!key) { detailEl.innerHTML = '<p style="color:var(--muted);text-align:center;padding:1.5rem 0;font-size:0.9rem;">No reports yet — tap <strong>New</strong> in the header to create one.</p>'; return; }
+  if (!key) { detailEl.innerHTML = '<p style="color:var(--muted);text-align:center;padding:1.5rem 0;font-size:0.9rem;">No reports yet — create one above.</p>'; return; }
 
   const data  = getData();
   const month = data.months[key];
   if (!month) { detailEl.innerHTML = ''; return; }
+
+  if (syncMonthRoster(key, data)) saveData(data);
 
   ensureMonthHidden(month);
 
@@ -2846,19 +2583,15 @@ function renderMonthDetail(key) {
       <div class="card">
         <div class="section-head" id="md-don-head">
           <h3 class="section-head__title">Donors</h3>
-          ${sectionHeadManageListBtn(key, 'donors', month)}
+          ${sectionHeadManageBtn(key, 'donors', month)}
         </div>
-        ${sectionHiddenMeta(month, 'donors')}
         <div id="md-donations">
-          ${visibleDonations.length
-            ? visibleDonations.map(d => monthAmountRowHtml(
-              key,
-              d.id,
-              donorName(data, d.donorId),
-              d.amount,
-              'donor'
-            )).join('')
-            : '<div class="empty-row">No donors on this report — use Manage list</div>'}
+          ${visibleDonations.map(d => monthListRowHtml(
+            donorName(data, d.donorId),
+            d.amount,
+            'donor',
+            `editDonation('${key}','${d.id}')`
+          )).join('')}
           ${monthListTotalRowHtml('Total', totalRaised)}
         </div>
       </div>
@@ -2867,19 +2600,15 @@ function renderMonthDetail(key) {
       <div class="card">
         <div class="section-head" id="md-dist-head">
           <h3 class="section-head__title">Recipients</h3>
-          ${sectionHeadManageListBtn(key, 'recipients', month)}
+          ${sectionHeadManageBtn(key, 'recipients', month)}
         </div>
-        ${sectionHiddenMeta(month, 'recipients')}
         <div id="md-distributions">
-          ${visibleDistributions.length
-            ? visibleDistributions.map(d => monthAmountRowHtml(
-              key,
-              d.id,
-              recipientName(data, d.recipientId),
-              d.amount,
-              'recipient'
-            )).join('')
-            : '<div class="empty-row">No recipients on this report — use Manage list</div>'}
+          ${visibleDistributions.map(d => monthListRowHtml(
+            recipientName(data, d.recipientId),
+            d.amount,
+            'recipient',
+            `editDistribution('${key}','${d.id}')`
+          )).join('')}
           ${monthListTotalRowHtml('Total', totalSent)}
         </div>
       </div>
@@ -2915,6 +2644,66 @@ function renderMonthDetail(key) {
 }
 
 // ── MONTH CRUD ───────────────────────────────────────────────────────────────
+window.editDonation = function(mKey, id) {
+  const data = getData();
+  const donation = (data.months[mKey].donations || []).find(x => x.id === id);
+  if (!donation) return;
+  const usedIds = usedIdsForMonth(mKey, 'donations', id);
+  openModal('Edit Donation', `
+    <div class="field">
+      <span class="field__label" id="donor-label">Donor</span>
+      ${personPillsHtml(donorsForPills(data, donation.donorId), { name: 'inp-donor', selectedId: donation.donorId, usedIds })}
+    </div>
+    <div class="field">
+      <label class="field__label" for="inp-amount">Amount</label>
+      <div class="field__prefix-wrap">
+        <span class="field__prefix">£</span>
+        <input class="field__input field__input--prefixed" id="inp-amount" type="number" min="0" step="0.01" value="${donation.amount}">
+      </div>
+    </div>`,
+    () => {
+      const donorId = getSelectedPillValue('inp-donor');
+      const amount  = parseFloat(document.getElementById('inp-amount').value);
+      if (!donorId || isNaN(amount) || amount < 0) return alert('Please select a donor and enter an amount of 0 or more.');
+      const d = getData();
+      const item = d.months[mKey].donations.find(x => x.id === id);
+      if (item) { item.donorId = donorId; item.amount = amount; }
+      saveData(d); renderMonthDetail(mKey);
+    }
+  );
+  setTimeout(() => document.getElementById('inp-amount')?.focus(), 80);
+};
+
+window.editDistribution = function(mKey, id) {
+  const data = getData();
+  const dist = (data.months[mKey].distributions || []).find(x => x.id === id);
+  if (!dist) return;
+  const usedIds = usedIdsForMonth(mKey, 'distributions', id);
+  openModal('Edit Distribution', `
+    <div class="field">
+      <span class="field__label" id="recip-label">Recipient</span>
+      ${personPillsHtml(recipientsForPills(data, dist.recipientId), { name: 'inp-recip', selectedId: dist.recipientId, usedIds })}
+    </div>
+    <div class="field">
+      <label class="field__label" for="inp-amount">Amount Sent</label>
+      <div class="field__prefix-wrap">
+        <span class="field__prefix">£</span>
+        <input class="field__input field__input--prefixed" id="inp-amount" type="number" min="0" step="0.01" value="${dist.amount}">
+      </div>
+    </div>`,
+    () => {
+      const recipientId = getSelectedPillValue('inp-recip');
+      const amount      = parseFloat(document.getElementById('inp-amount').value);
+      if (!recipientId || isNaN(amount) || amount < 0) return alert('Please select a recipient and enter an amount of 0 or more.');
+      const d = getData();
+      const item = d.months[mKey].distributions.find(x => x.id === id);
+      if (item) { item.recipientId = recipientId; item.amount = amount; }
+      saveData(d); renderMonthDetail(mKey);
+    }
+  );
+  setTimeout(() => document.getElementById('inp-amount')?.focus(), 80);
+};
+
 window.addNote = function(mKey) {
   openModal('Add Note', `
     <div class="field">
@@ -2972,8 +2761,7 @@ window.deleteMonth = function(key) {
       activeMonthKey = null;
       renderMonths();
     },
-    true,
-    'Remove'
+    true
   );
 };
 
@@ -2992,7 +2780,7 @@ function openModal(title, bodyHTML, onConfirm, opts = {}) {
   if (opts.onDelete) {
     modalFooter.className = 'modal__footer modal__footer--with-delete';
     modalFooter.innerHTML = `
-      <button type="button" class="btn btn--danger" id="btn-delete">${esc(opts.deleteLabel || 'Delete')}</button>
+      <button type="button" class="btn btn--danger" id="btn-delete">Delete</button>
       <div class="modal__footer-actions">
         <button type="button" class="btn btn--ghost" id="btn-cancel">Cancel</button>
         <button type="button" class="btn btn--primary" id="btn-confirm">Save</button>
@@ -3012,15 +2800,14 @@ function openModal(title, bodyHTML, onConfirm, opts = {}) {
   document.body.style.overflow = 'hidden';
 }
 
-function openConfirm(title, message, onConfirm, isDanger = false, confirmLabel = null) {
+function openConfirm(title, message, onConfirm, isDanger = false) {
   _onConfirm = onConfirm;
   modalTitle.textContent = title;
   modalBody.innerHTML    = `<p style="font-size:0.9rem;color:var(--muted);margin:0;">${esc(message)}</p>`;
   modalFooter.className  = 'modal__footer';
-  const actionLabel = confirmLabel || (isDanger ? 'Delete' : 'Confirm');
   modalFooter.innerHTML  = `
     <button class="btn btn--ghost" id="btn-cancel">Cancel</button>
-    <button class="btn ${isDanger ? 'btn--danger' : 'btn--primary'}" id="btn-confirm">${esc(actionLabel)}</button>`;
+    <button class="btn ${isDanger ? 'btn--danger' : 'btn--primary'}" id="btn-confirm">${isDanger ? 'Delete' : 'Confirm'}</button>`;
   document.getElementById('btn-cancel').addEventListener('click', closeModal);
   document.getElementById('btn-confirm').addEventListener('click', () => { _onConfirm && _onConfirm(); closeModal(); });
   overlay.classList.add('overlay--open');
@@ -3041,15 +2828,13 @@ window.openMonthRosterManage = function(mKey, kind) {
   const isRecipients = kind === 'recipients';
   const people = isRecipients ? activeRecipients(data) : activeDonors(data);
   const personKind = isRecipients ? 'recipient' : 'donor';
-  const sectionLabel = isRecipients ? 'Recipients' : 'Donors';
-  const title = `${sectionLabel} on ${monthLabel(mKey)}`;
+  const title = isRecipients ? 'Manage recipients' : 'Manage donors';
   const listHtml = rosterChecklistHtml(people, {
     isChecked: p => !isPersonHidden(month, personKind, p.id),
     emptyMessage: `No ${isRecipients ? 'recipients' : 'donors'} on the People tab yet.`,
   });
 
   openModal(title, `
-    <p class="manage-roster-note">Unchecked people won\u2019t appear on this report.</p>
     <div class="manage-roster-list">${listHtml}</div>`,
     () => {
       const d = getData();
