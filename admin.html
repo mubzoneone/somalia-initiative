@@ -38,6 +38,7 @@
   --font:         "DM Sans", system-ui, -apple-system, sans-serif;
   --header-h:     56px;
   --max-w:        440px;
+  --content-max:  1100px;
   --shadow-sm:    0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.05);
   --shadow-md:    0 4px 12px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06);
   --shadow-lg:    0 12px 40px rgba(0,0,0,0.18);
@@ -110,9 +111,79 @@ body {
   height: 100dvh;
   margin: 0 auto;
   display: grid;
-  grid-template-rows: var(--header-h) 1fr;
+  grid-template-columns: 1fr;
+  grid-template-rows: 1fr;
   overflow: hidden;
   background: var(--bg);
+}
+
+.shell__body {
+  min-width: 0;
+  display: grid;
+  grid-template-rows: var(--header-h) 1fr;
+  overflow: hidden;
+}
+
+.sidebar {
+  display: none;
+}
+
+.sidebar__brand {
+  margin: 0;
+  padding: 1.25rem 1rem 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  color: var(--text);
+}
+
+.sidebar__nav {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 0.15rem;
+  padding: 0 0.5rem;
+}
+
+.sidebar__item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  font-family: var(--font);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--muted);
+  background: none;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+  transition: background .12s, color .12s;
+}
+
+.sidebar__item:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+
+.sidebar__item--active {
+  background: var(--accent-sub);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.sidebar__item--link {
+  margin: auto 0.5rem 1rem;
+  flex: 0;
+}
+
+.month-detail-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
 }
 
 /* ── HEADER ──────────────────────────────────────────────────────────────── */
@@ -993,6 +1064,103 @@ body {
 
 .header__save-status--error { color: #b42318; }
 
+/* ── DESKTOP (≥ 900px) ───────────────────────────────────────────────────── */
+@media (min-width: 900px) {
+  .shell {
+    max-width: none;
+    width: 100%;
+    margin: 0;
+    grid-template-columns: 220px minmax(0, 1fr);
+    grid-template-rows: 1fr;
+  }
+
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--surface);
+    border-right: 1.5px solid var(--border);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .header__nav {
+    display: none;
+  }
+
+  .shell__body {
+    min-width: 0;
+  }
+
+  .main .panel {
+    padding: 1rem 1.5rem 1.5rem;
+    max-width: var(--content-max);
+    margin-left: auto;
+    margin-right: auto;
+    width: 100%;
+  }
+
+  .month-controls .month-select-wrap {
+    max-width: 280px;
+  }
+
+  .month-detail-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.85rem;
+  }
+
+  .month-detail-layout > .month-summary,
+  .month-detail-layout > .card--notes {
+    grid-column: 1 / -1;
+  }
+
+  #panel-people {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.85rem;
+    align-items: start;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .list-row--nav .list-row__body {
+    display: grid;
+    grid-template-columns: 1fr auto auto auto;
+    align-items: center;
+  }
+
+  .list-row--nav .list-row__main {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.65rem;
+  }
+
+  .overlay {
+    align-items: center;
+    padding: 1.5rem;
+  }
+
+  .modal {
+    max-width: 480px;
+    border-radius: var(--radius-lg);
+    transform: translateY(12px) scale(0.98);
+  }
+
+  .overlay--open .modal {
+    transform: none;
+  }
+
+  .modal__handle {
+    display: none;
+  }
+
+  .passcode-wrap {
+    max-width: 360px;
+  }
+}
+
 /* ── PASSCODE SCREEN ──────────────────────────────────────────────────────── */
 .passcode-screen {
   position: fixed;
@@ -1196,6 +1364,18 @@ body {
 
 <div class="shell">
 
+  <aside class="sidebar" aria-label="Admin navigation">
+    <p class="sidebar__brand">Somalia Initiative</p>
+    <nav class="sidebar__nav">
+      <button type="button" class="sidebar__item sidebar__item--active" data-panel="months" onclick="selectNavPanel('months')">Reports</button>
+      <button type="button" class="sidebar__item" data-panel="overview" onclick="selectNavPanel('overview')">Overview</button>
+      <button type="button" class="sidebar__item" data-panel="people" onclick="selectNavPanel('people')">People</button>
+    </nav>
+    <a href="index.html" class="sidebar__item sidebar__item--link" onclick="closeRowMenus()">Public site</a>
+  </aside>
+
+  <div class="shell__body">
+
   <!-- HEADER -->
   <header class="header">
     <div class="header__nav row-menu row-menu--drop-down" id="header-nav">
@@ -1282,6 +1462,8 @@ body {
     </div>
 
   </main>
+
+  </div>
 
 </div>
 
@@ -1823,6 +2005,9 @@ function switchTab(name) {
   document.querySelectorAll('#header-nav [data-panel]').forEach(btn => {
     btn.classList.toggle('row-menu__item--active', btn.dataset.panel === name);
   });
+  document.querySelectorAll('.sidebar [data-panel]').forEach(btn => {
+    btn.classList.toggle('sidebar__item--active', btn.dataset.panel === name);
+  });
   if (name === 'overview') renderOverview();
   if (name === 'people')   renderPeople();
   if (name === 'months')   renderMonths();
@@ -2104,7 +2289,7 @@ function renderMonthDetail(key) {
   const totalRaised = sum(visibleDonations.map(d => d.amount));
 
   detailEl.innerHTML = `
-    <div style="display:flex;flex-direction:column;gap:0.85rem;">
+    <div class="month-detail-layout">
 
       <div class="month-summary">
         <div class="month-summary__cell">
@@ -2146,7 +2331,7 @@ function renderMonthDetail(key) {
       </div>
 
       <!-- NOTES -->
-      <div class="card card--menu-overflow">
+      <div class="card card--menu-overflow card--notes">
         <div class="section-head">
           <h3 class="section-head__title">Notes</h3>
         </div>
