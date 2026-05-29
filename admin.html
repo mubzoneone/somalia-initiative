@@ -2472,6 +2472,9 @@ function monthListTotalRowHtml(label, total) {
 }
 
 function peopleListRowHtml(person, type) {
+  const data = getData();
+  const kind = type === 'donor' ? 'donor' : 'recipient';
+  const removeLabel = isPersonReferencedInReports(data, kind, person.id) ? 'Archive' : 'Delete';
   return `
     <div class="list-row list-row--people">
       <div class="list-row__body">
@@ -2479,7 +2482,7 @@ function peopleListRowHtml(person, type) {
         <div class="list-row__actions">
           ${rowMenuHtml([
             { label: 'Rename', onClick: `editPerson('${type}','${person.id}')` },
-            { label: 'Archive', danger: true, onClick: `deletePerson('${type}','${person.id}')` },
+            { label: removeLabel, danger: true, onClick: `deletePerson('${type}','${person.id}')` },
           ])}
         </div>
       </div>
@@ -2654,6 +2657,8 @@ window.editPerson = function(type, id) {
   const person = list.find(p => p.id === id);
   if (!person) return;
   const label = type === 'donor' ? 'Donor' : 'Recipient';
+  const kind = type === 'donor' ? 'donor' : 'recipient';
+  const removeLabel = isPersonReferencedInReports(data, kind, id) ? 'Archive' : 'Delete';
 
   openModal(`Edit ${label}`, `
     <div class="field">
@@ -2671,7 +2676,7 @@ window.editPerson = function(type, id) {
     },
     {
       onDelete: () => { closeModal(); deletePerson(type, id); },
-      deleteLabel: 'Archive',
+      deleteLabel: removeLabel,
     }
   );
   setTimeout(() => { const i = document.getElementById('inp-pname'); if(i){i.focus();i.select();} }, 80);
@@ -2692,8 +2697,11 @@ window.deletePerson = function(type, id) {
   const list = type === 'donor' ? data.donors : data.recipients;
   const person = list.find(p => p.id === id);
   const name = person?.name || 'this person';
+  const kind = type === 'donor' ? 'donor' : 'recipient';
+  const willArchive = isPersonReferencedInReports(data, kind, id);
+  const actionLabel = willArchive ? 'Archive' : 'Delete';
   openConfirm(
-    `Archive ${name}?`,
+    `${actionLabel} ${name}?`,
     deletePeopleConfirmMessage(data, type, new Set([id])),
     () => {
       const d = getData();
@@ -2701,7 +2709,7 @@ window.deletePerson = function(type, id) {
       saveData(d); renderPeople();
     },
     true,
-    'Archive'
+    actionLabel
   );
 };
 
