@@ -429,6 +429,10 @@ body {
   border-radius: var(--radius);
 }
 
+.manage-roster-list--compact {
+  max-height: 22vh;
+}
+
 .manage-roster-row {
   display: flex;
   align-items: center;
@@ -1879,6 +1883,48 @@ function deletePeopleConfirmMessage(data, type, ids) {
   return `${n} people will be removed completely. None appear on any reports.`;
 }
 
+function rosterChecklistHtml(people, opts = {}) {
+  const {
+    isChecked = () => true,
+    emptyMessage = 'No people on the People tab yet.',
+    inputClass = 'manage-roster-toggle',
+    dataKind = '',
+    ariaVerb = 'Show',
+  } = opts;
+
+  if (!people.length) {
+    return `<p class="manage-roster-note" style="margin:0;padding:0.85rem;">${esc(emptyMessage)}</p>`;
+  }
+
+  const kindAttr = dataKind ? ` data-kind="${esc(dataKind)}"` : '';
+  return people.map(p => {
+    const checked = isChecked(p);
+    return `<label class="manage-roster-row">
+      <span>${esc(p.name)}</span>
+      <input type="checkbox" class="${esc(inputClass)}" data-person-id="${esc(p.id)}"${kindAttr}${checked ? ' checked' : ''} aria-label="${esc(ariaVerb)} ${esc(p.name)} in this report">
+    </label>`;
+  }).join('');
+}
+
+function applyMonthRosterFromCheckboxes(month, people, personKind, checkboxClass) {
+  ensureMonthHidden(month);
+  const isRecipients = personKind === 'recipient';
+  const listKey = isRecipients ? 'distributions' : 'donations';
+  const idField = isRecipients ? 'recipientId' : 'donorId';
+  if (!month[listKey]) month[listKey] = [];
+
+  document.querySelectorAll(`.${checkboxClass}`).forEach(el => {
+    const personId = el.getAttribute('data-person-id');
+    setPersonHidden(month, personKind, personId, !el.checked);
+  });
+  people.forEach(p => {
+    if (isPersonHidden(month, personKind, p.id)) return;
+    if (!month[listKey].some(row => row[idField] === p.id)) {
+      month[listKey].push({ id: genId(), [idField]: p.id, amount: 0 });
+    }
+  });
+}
+
 function syncMonthRoster(mKey, data) {
   const month = data.months[mKey];
   if (!month) return false;
@@ -2308,7 +2354,7 @@ document.getElementById('btn-add-donor').addEventListener('click', () => {
   openModal('Add Donor', `
     <div class="field">
       <label class="field__label" for="inp-pname">Full Name</label>
-      <input class="field__input" id="inp-pname" type="text" placeholder="e.g. Ahmed Hassan" autocomplete="off">
+      <input class="field__input" id="inp-pname" type="text" placeholder="Enter name" autocomplete="off">
     </div>`,
     () => {
       const name = document.getElementById('inp-pname').value.trim();
@@ -2325,7 +2371,7 @@ document.getElementById('btn-add-recipient').addEventListener('click', () => {
   openModal('Add Recipient', `
     <div class="field">
       <label class="field__label" for="inp-pname">Full Name</label>
-      <input class="field__input" id="inp-pname" type="text" placeholder="e.g. Zaynab Munye" autocomplete="off">
+      <input class="field__input" id="inp-pname" type="text" placeholder="Enter name" autocomplete="off">
     </div>`,
     () => {
       const name = document.getElementById('inp-pname').value.trim();
@@ -2432,6 +2478,8 @@ document.getElementById('month-select').addEventListener('change', e => {
 document.getElementById('btn-new-month').addEventListener('click', () => {
   const data = getData();
   const suggested = suggestedNewMonthParts(data);
+  const donors = activeDonors(data);
+  const recipients = activeRecipients(data);
   openModal('New Report', `
     <div class="field">
       <label class="field__label" for="inp-year">Year</label>
@@ -2442,6 +2490,24 @@ document.getElementById('btn-new-month').addEventListener('click', () => {
       <select class="field__select" id="inp-month">
         ${newMonthOptionsHtml(suggested.year, data, suggested.month)}
       </select>
+    </div>
+    <div class="field" style="margin-bottom:0.75rem;">
+      <span class="field__label">Donors</span>
+      <div class="manage-roster-list manage-roster-list--compact">${rosterChecklistHtml(donors, {
+        emptyMessage: 'No donors on the People tab yet.',
+        inputClass: 'new-report-roster-toggle',
+        dataKind: 'donor',
+        ariaVerb: 'Include',
+      })}</div>
+    </div>
+    <div class="field" style="margin-bottom:0;">
+      <span class="field__label">Recipients</span>
+      <div class="manage-roster-list manage-roster-list--compact">${rosterChecklistHtml(recipients, {
+        emptyMessage: 'No recipients on the People tab yet.',
+        inputClass: 'new-report-roster-toggle',
+        dataKind: 'recipient',
+        ariaVerb: 'Include',
+      })}</div>
     </div>`,
     () => {
       const y = document.getElementById('inp-year').value.trim();
@@ -2450,13 +2516,29 @@ document.getElementById('btn-new-month').addEventListener('click', () => {
       const key = monthKeyFromParts(y, m);
       const d = getData();
       if (d.months[key]) return alert('That report already exists.');
-      d.months[key] = { donations: [], distributions: [], notes: [] };
-      syncMonthRoster(key, d);
+      const month = { donations: [], distributions: [], notes: [] };
+      ensureMonthHidden(month);
+
+      document.querySelectorAll('.new-report-roster-toggle').forEach(el => {
+        const personId = el.getAttribute('data-person-id');
+        const kind = el.getAttribute('data-kind');
+        const personKind = kind === 'recipient' ? 'recipient' : 'donor';
+        setPersonHidden(month, personKind, personId, !el.checked);
+        if (!el.checked) return;
+        const isRecipients = personKind === 'recipient';
+        const listKey = isRecipients ? 'distributions' : 'donations';
+        const idField = isRecipients ? 'recipientId' : 'donorId';
+        month[listKey].push({ id: genId(), [idField]: personId, amount: 0 });
+      });
+
+      d.months[key] = month;
       saveData(d);
       activeMonthKey = key;
       renderMonths();
     }
   );
+  const confirmBtn = document.getElementById('btn-confirm');
+  if (confirmBtn) confirmBtn.textContent = 'Create';
   setTimeout(() => {
     const yearEl = document.getElementById('inp-year');
     yearEl?.addEventListener('input', refreshNewMonthSelect);
@@ -2739,15 +2821,10 @@ window.openMonthRosterManage = function(mKey, kind) {
   const people = isRecipients ? activeRecipients(data) : activeDonors(data);
   const personKind = isRecipients ? 'recipient' : 'donor';
   const title = isRecipients ? 'Manage recipients' : 'Manage donors';
-  const listHtml = people.length
-    ? people.map(p => {
-        const visible = !isPersonHidden(month, personKind, p.id);
-        return `<label class="manage-roster-row">
-          <span>${esc(p.name)}</span>
-          <input type="checkbox" class="manage-roster-toggle" data-person-id="${esc(p.id)}"${visible ? ' checked' : ''} aria-label="Show ${esc(p.name)} in this report">
-        </label>`;
-      }).join('')
-    : `<p class="manage-roster-note" style="margin:0;padding:0.85rem;">No ${isRecipients ? 'recipients' : 'donors'} on the People tab yet.</p>`;
+  const listHtml = rosterChecklistHtml(people, {
+    isChecked: p => !isPersonHidden(month, personKind, p.id),
+    emptyMessage: `No ${isRecipients ? 'recipients' : 'donors'} on the People tab yet.`,
+  });
 
   openModal(title, `
     <div class="manage-roster-list">${listHtml}</div>`,
@@ -2755,19 +2832,7 @@ window.openMonthRosterManage = function(mKey, kind) {
       const d = getData();
       const m = d.months[mKey];
       if (!m) return;
-      ensureMonthHidden(m);
-      document.querySelectorAll('.manage-roster-toggle').forEach(el => {
-        const personId = el.getAttribute('data-person-id');
-        setPersonHidden(m, personKind, personId, !el.checked);
-      });
-      people.forEach(p => {
-        if (isPersonHidden(m, personKind, p.id)) return;
-        const listKey = isRecipients ? 'distributions' : 'donations';
-        const idField = isRecipients ? 'recipientId' : 'donorId';
-        if (!m[listKey].some(row => row[idField] === p.id)) {
-          m[listKey].push({ id: genId(), [idField]: p.id, amount: 0 });
-        }
-      });
+      applyMonthRosterFromCheckboxes(m, people, personKind, 'manage-roster-toggle');
       saveData(d);
       renderMonthDetail(mKey);
     }
