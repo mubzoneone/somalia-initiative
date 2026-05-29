@@ -76,7 +76,6 @@
   .card,
   .stat-card,
   .reserves-card,
-  .month-summary,
   .month-select__face {
     box-shadow: none;
   }
@@ -477,6 +476,17 @@ body {
 .list-row:hover { background: var(--surface-hover); }
 .list-row--selectable { cursor: pointer; }
 
+.list-row--total {
+  cursor: default;
+  border-top: 1.5px solid var(--border);
+  border-bottom: none;
+  background: var(--surface);
+}
+
+.list-row--total:hover { background: var(--surface); }
+
+.list-row--total .list-row__name { font-weight: 700; }
+
 .list-row__body {
   flex: 1;
   min-width: 0;
@@ -812,42 +822,6 @@ body {
   background-repeat: no-repeat;
   background-size: contain;
   background-position: center;
-}
-
-/* ── MONTH SUMMARY ───────────────────────────────────────────────────────── */
-.month-summary {
-  display: grid;
-  grid-template-columns: 1fr;
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  border: 1.5px solid var(--border);
-  box-shadow: var(--shadow-sm);
-}
-
-.month-summary__cell {
-  background: var(--surface);
-  padding: 0.65rem 0.5rem;
-  text-align: center;
-  border-right: none;
-}
-
-.month-summary__label {
-  display: block;
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--muted);
-  margin-bottom: 0.2rem;
-}
-
-.month-summary__val {
-  display: block;
-  font-size: 1.05rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  color: var(--text);
-  line-height: 1;
 }
 
 /* ── BUTTONS ─────────────────────────────────────────────────────────────── */
@@ -1213,7 +1187,6 @@ body {
     gap: 0.85rem;
   }
 
-  .month-detail-layout > .month-summary,
   .month-detail-layout > .card--notes {
     grid-column: 1 / -1;
   }
@@ -2178,6 +2151,16 @@ function monthListRowHtml(displayName, amount, kind, editFn) {
     </div>`;
 }
 
+function monthListTotalRowHtml(label, total) {
+  return `
+    <div class="list-row list-row--total">
+      <div class="list-row__body">
+        <span class="list-row__name">${esc(label)}</span>
+        <span class="list-row__amount">${fmt(total)}</span>
+      </div>
+    </div>`;
+}
+
 function peopleListRowHtml(person, type) {
   return `
     <div class="list-row list-row--selectable list-row--nav">
@@ -2467,7 +2450,7 @@ document.getElementById('btn-new-month').addEventListener('click', () => {
       const key = monthKeyFromParts(y, m);
       const d = getData();
       if (d.months[key]) return alert('That report already exists.');
-      d.months[key] = { donations: [], distributions: [], notes: [window.SI_DEFAULT_MONTHLY_NOTE] };
+      d.months[key] = { donations: [], distributions: [], notes: [] };
       syncMonthRoster(key, d);
       saveData(d);
       activeMonthKey = key;
@@ -2501,16 +2484,10 @@ function renderMonthDetail(key) {
   const notes         = month.notes         || [];
 
   const totalRaised = sum(visibleDonations.map(d => d.amount));
+  const totalSent   = sum(visibleDistributions.map(d => d.amount));
 
   detailEl.innerHTML = `
     <div class="month-detail-layout">
-
-      <div class="month-summary">
-        <div class="month-summary__cell">
-          <span class="month-summary__label">Raised</span>
-          <span class="month-summary__val">${fmt(totalRaised)}</span>
-        </div>
-      </div>
 
       <!-- DONORS -->
       <div class="card">
@@ -2525,6 +2502,7 @@ function renderMonthDetail(key) {
             'donor',
             `editDonation('${key}','${d.id}')`
           )).join('')}
+          ${monthListTotalRowHtml('Total', totalRaised)}
         </div>
       </div>
 
@@ -2541,6 +2519,7 @@ function renderMonthDetail(key) {
             'recipient',
             `editDistribution('${key}','${d.id}')`
           )).join('')}
+          ${monthListTotalRowHtml('Total', totalSent)}
         </div>
       </div>
 
