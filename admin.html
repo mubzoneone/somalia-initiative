@@ -20,6 +20,7 @@
   --accent:       #2f72b8;
   --accent-dark:  #245a95;
   --accent-sub:   rgba(47,114,184,0.10);
+  --pill-selected-text: var(--accent-dark);
   --border:       #e2e6ec;
   --border-strong:#c8cdd6;
   --text:         #0d1117;
@@ -53,6 +54,7 @@
     --accent:       #4090D8;
     --accent-dark:  #2f72b8;
     --accent-sub:   rgba(64,144,216,0.22);
+    --pill-selected-text: #9ECBF0;
     --border:       #38383A;
     --border-strong:#48484A;
     --text:         #FFFFFF;
@@ -1237,7 +1239,7 @@ body {
 .pill-option input:checked + .pill-option__text {
   border-color: var(--accent);
   background: var(--accent-sub);
-  color: var(--accent-dark);
+  color: var(--pill-selected-text);
 }
 
 .pill-group--empty {
@@ -2256,15 +2258,6 @@ function copyMonthRoster(targetMonth, sourceMonth, data) {
   targetMonth.hiddenRecipients = activeRecipients(data).map(r => r.id);
 }
 
-function sectionHiddenMeta(month, kind) {
-  const n = kind === 'donors'
-    ? (month.hiddenDonors?.length || 0)
-    : (month.hiddenRecipients?.length || 0);
-  if (!n) return '';
-  const label = n === 1 ? '1 person not on this report' : `${n} people not on this report`;
-  return `<p class="section-head__meta">${label}</p>`;
-}
-
 function sectionHeadManageListBtn(mKey, kind, month) {
   const isRecipients = kind === 'recipients';
   const personKind = isRecipients ? 'recipient' : 'donor';
@@ -2806,7 +2799,6 @@ function renderMonthDetail(key) {
           <h3 class="section-head__title">Donors</h3>
           ${sectionHeadManageListBtn(key, 'donors', month)}
         </div>
-        ${sectionHiddenMeta(month, 'donors')}
         <div id="md-donations">
           ${visibleDonations.length
             ? visibleDonations.map(d => monthAmountRowHtml(
@@ -2827,7 +2819,6 @@ function renderMonthDetail(key) {
           <h3 class="section-head__title">Recipients</h3>
           ${sectionHeadManageListBtn(key, 'recipients', month)}
         </div>
-        ${sectionHiddenMeta(month, 'recipients')}
         <div id="md-distributions">
           ${visibleDistributions.length
             ? visibleDistributions.map(d => monthAmountRowHtml(
