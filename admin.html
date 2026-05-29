@@ -10,6 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700;9..40,800&display=swap" rel="stylesheet">
+  <script>document.documentElement.classList.add('si-admin-auth-pending');</script>
   <style>
 /* ── TOKENS ─────────────────────────────────────────────────────────────── */
 :root {
@@ -175,9 +176,22 @@ body {
   font-weight: 700;
 }
 
-.sidebar__item--link {
-  margin: auto 0.5rem 1rem;
-  flex: 0;
+.sidebar__spacer { flex: 1; min-height: 0.75rem; }
+
+.sidebar__bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.5rem;
+  border-top: 1.5px solid var(--border);
+}
+
+.sidebar__item--danger {
+  color: var(--danger);
+}
+.sidebar__item--danger:hover {
+  background: var(--danger-sub);
+  color: var(--danger-hover);
 }
 
 .month-detail-layout {
@@ -1382,7 +1396,54 @@ body.passcode-locked { overflow: hidden; }
 .passcode-input.is-shaking {
   animation: passcodeShake 0.52s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
+
+html.si-admin-auth-pending .passcode-entry {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+html.si-admin-auth-pending .shell {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.passcode-checking {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+html.si-admin-auth-pending .passcode-checking {
+  display: flex;
+}
+
+html.si-admin-auth-pending .passcode-brand {
+  display: none;
+}
+
+.passcode-checking__label {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(255,255,255,0.65);
+  letter-spacing: 0.06em;
+}
+
+.passcode-checking__spinner {
+  width: 22px;
+  height: 22px;
+  border: 2px solid rgba(255,255,255,0.28);
+  border-top-color: rgba(255,255,255,0.92);
+  border-radius: 50%;
+  animation: passcodeSpin 0.7s linear infinite;
+}
+
+@keyframes passcodeSpin {
+  to { transform: rotate(360deg); }
+}
   </style>
+  <noscript><style>html.si-admin-auth-pending .passcode-entry{visibility:visible;pointer-events:auto}html.si-admin-auth-pending .passcode-checking{display:none}html.si-admin-auth-pending .passcode-brand{display:flex}</style></noscript>
 </head>
 <body>
 <!-- PASSCODE SCREEN -->
@@ -1394,6 +1455,14 @@ body.passcode-locked { overflow: hidden; }
         <path d="M32 4L38.5 24.5H60L42.75 37.5L49.25 58L32 45L14.75 58L21.25 37.5L4 24.5H25.5L32 4Z" fill="white"/>
       </svg>
       <p class="passcode-brand__label">Admin</p>
+    </div>
+
+    <div class="passcode-checking" aria-hidden="true">
+      <svg class="passcode-brand__star" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M32 4L38.5 24.5H60L42.75 37.5L49.25 58L32 45L14.75 58L21.25 37.5L4 24.5H25.5L32 4Z" fill="white"/>
+      </svg>
+      <div class="passcode-checking__spinner" aria-hidden="true"></div>
+      <p class="passcode-checking__label">Checking…</p>
     </div>
 
     <div class="passcode-entry">
@@ -1440,7 +1509,11 @@ body.passcode-locked { overflow: hidden; }
       <button type="button" class="sidebar__item" data-panel="overview" onclick="selectNavPanel('overview')">Overview</button>
       <button type="button" class="sidebar__item" data-panel="people" onclick="selectNavPanel('people')">People</button>
     </nav>
-    <a href="index.html" class="sidebar__item sidebar__item--link" onclick="closeRowMenus()">Public site</a>
+    <div class="sidebar__spacer" aria-hidden="true"></div>
+    <div class="sidebar__bottom" aria-label="Account actions">
+      <a href="index.html" class="sidebar__item" onclick="closeRowMenus()">Public site</a>
+      <button type="button" class="sidebar__item sidebar__item--danger" onclick="siAdminSignOut()">Sign out</button>
+    </div>
   </aside>
 
   <div class="shell__body">
@@ -1457,7 +1530,6 @@ body.passcode-locked { overflow: hidden; }
     <div class="header__spacer" aria-hidden="true"></div>
     <div class="header__actions" id="header-month-actions">
       <div id="month-head-menu"></div>
-      <div id="admin-user-menu"></div>
       <button class="btn btn--primary btn--sm btn--pill" id="btn-new-month">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
         New
@@ -1591,14 +1663,40 @@ body.passcode-locked { overflow: hidden; }
     }, 900);
   }
 
-  function unlock() {
+  function clearAuthPending() {
+    document.documentElement.classList.remove('si-admin-auth-pending');
+  }
+
+  function rememberSession() {
     try { localStorage.setItem(REMEMBER_KEY, '1'); } catch { /* ignore */ }
+  }
+
+  function clearRemembered() {
+    try { localStorage.removeItem(REMEMBER_KEY); } catch { /* ignore */ }
+  }
+
+  function unlockFromSession() {
+    rememberSession();
+    clearAuthPending();
+    if (screen) screen.remove();
+    clearPasscodeLock();
+    notifyReady();
+  }
+
+  function unlockFromPasscode() {
+    rememberSession();
+    clearAuthPending();
     notifyReady();
     screen.classList.add('is-unlocking');
     setTimeout(function () {
       screen.remove();
       clearPasscodeLock();
     }, UNLOCK_MS);
+  }
+
+  function showPasscodeForm() {
+    clearAuthPending();
+    setupPasscodeUI();
   }
 
   window.siAdminSignOut = function () {
@@ -1635,7 +1733,7 @@ body.passcode-locked { overflow: hidden; }
       setTimeout(function () {
         verifyPasscode(input)
           .then(function (ok) {
-            if (ok) { unlock(); }
+            if (ok) { unlockFromPasscode(); }
             else { locked = false; shake(); }
           })
           .catch(function () {
@@ -1664,34 +1762,24 @@ body.passcode-locked { overflow: hidden; }
     setTimeout(function () { if (inputEl) inputEl.focus(); }, 60);
   }
 
-  function tryResumeSession() {
-    var remembered = false;
-    try { remembered = localStorage.getItem(REMEMBER_KEY) === '1'; } catch { remembered = false; }
-
-    if (!remembered) {
-      setupPasscodeUI();
-      return;
-    }
-
+  function checkSessionAndGate() {
     fetch('/api/auth', { credentials: 'include' })
       .then(function (res) { return res.json(); })
       .then(function (data) {
         if (data && data.ok) {
-          screen.remove();
-          clearPasscodeLock();
-          notifyReady();
+          unlockFromSession();
         } else {
-          try { localStorage.removeItem(REMEMBER_KEY); } catch { /* ignore */ }
-          setupPasscodeUI();
+          clearRemembered();
+          showPasscodeForm();
         }
       })
       .catch(function () {
-        try { localStorage.removeItem(REMEMBER_KEY); } catch { /* ignore */ }
-        setupPasscodeUI();
+        clearRemembered();
+        showPasscodeForm();
       });
   }
 
-  tryResumeSession();
+  checkSessionAndGate();
 })();
 </script>
 
@@ -1997,14 +2085,6 @@ function rowMenuHtml(items, opts = {}) {
     </div>`;
 }
 
-function renderAdminUserMenu() {
-  const el = document.getElementById('admin-user-menu');
-  if (!el) return;
-  el.innerHTML = rowMenuHtml([
-    { label: 'Sign out', danger: true, onClick: 'siAdminSignOut()' },
-  ], { dropDown: true });
-}
-
 window.toggleRowMenu = function(btn, e) {
   e.stopPropagation();
   const menu = btn.closest('.row-menu');
@@ -2127,7 +2207,6 @@ function updateHeaderActions() {
   const monthActs = document.getElementById('header-month-actions');
   if (monthActs) monthActs.hidden = !isMonths;
   if (isMonths) renderMonthHeadMenu();
-  renderAdminUserMenu();
 }
 
 function switchTab(name) {
