@@ -6,15 +6,15 @@ function sendJson(res, status, data) {
   res.end(JSON.stringify(data));
 }
 
-function getJsonBinEnv() {
-  const binId = process.env.JSONBIN_BIN_ID;
-  const masterKey = process.env.JSONBIN_MASTER_KEY;
-  if (!binId || !masterKey) return null;
-  return { binId, masterKey };
+function getSupabaseEnv() {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) return null;
+  return { url, key };
 }
 
-function jsonBinUrl(binId) {
-  return `https://api.jsonbin.io/v3/b/${binId}`;
+function tableUrl(supabaseUrl) {
+  return `${supabaseUrl.replace(/\/$/, '')}/rest/v1/app_data`;
 }
 
 function readJsonBody(req) {
@@ -39,27 +39,44 @@ function readJsonBody(req) {
 }
 
 module.exports = async function handler(req, res) {
-  const env = getJsonBinEnv();
+  try {
+    return await _handler(req, res);
+  } catch (err) {
+    console.error('[api/data] unhandled error:', err);
+    return sendJson(res, 500, { error: `Unhandled error: ${err.message}` });
+  }
+};
+
+async function _handler(req, res) {
+  const env = getSupabaseEnv();
   if (!env) {
     return sendJson(res, 500, { error: 'Server not configured' });
   }
 
-  const { binId, masterKey } = env;
-  const headers = { 'X-Master-Key': masterKey };
+  const { url, key } = env;
+  const baseHeaders = {
+    'apikey': key,
+    'Authorization': `Bearer ${key}`,
+  };
 
   if (req.method === 'GET') {
     try {
-      const upstream = await fetch(jsonBinUrl(binId), { headers });
-      if (upstream.status === 404) {
-        return sendJson(res, 200, { record: null });
-      }
+      const upstream = await fetch(
+        `${tableUrl(url)}?id=eq.1&select=record`,
+        { headers: { ...baseHeaders, 'Accept': 'application/json' } }
+      );
+
       if (!upstream.ok) {
         return sendJson(res, upstream.status, { error: 'Failed to load data' });
       }
-      const body = await upstream.json();
-      return sendJson(res, 200, { record: body.record ?? null });
-    } catch {
-      return sendJson(res, 502, { error: 'Failed to reach data store' });
+
+      const rows = await upstream.json();
+      const record = Array.isArray(rows) && rows.length > 0 ? rows[0].record : null;
+
+      res.setHeader('Cache-Control', 'private, max-age=0, must-revalidate');
+      return sendJson(res, 200, { record: record ?? null });
+    } catch (err) {
+      return sendJson(res, 502, { error: `Failed to reach data store: ${err.message}` });
     }
   }
 
@@ -80,17 +97,27 @@ module.exports = async function handler(req, res) {
     }
 
     try {
-      const upstream = await fetch(jsonBinUrl(binId), {
-        method: 'PUT',
-        headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+      const upstream = await fetch(tableUrl(url), {
+        method: 'POST',
+        headers: {
+          ...baseHeaders,
+          'Content-Type': 'application/json',
+          'Prefer': 'resolution=merge-duplicates,return=minimal',
+        },
+        body: JSON.stringify({
+          id: 1,
+          record: payload,
+          updated_at: new Date().toISOString(),
+        }),
       });
+
       if (!upstream.ok) {
         return sendJson(res, upstream.status, { error: 'Failed to save data' });
       }
+
       return sendJson(res, 200, { ok: true });
-    } catch {
-      return sendJson(res, 502, { error: 'Failed to reach data store' });
+    } catch (err) {
+      return sendJson(res, 502, { error: `Failed to reach data store: ${err.message}` });
     }
   }
 
