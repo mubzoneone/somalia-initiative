@@ -1579,7 +1579,8 @@ input[type="number"],
     gap: 0.85rem;
   }
 
-  .month-detail-layout > .card--notes {
+  .month-detail-layout > .card--notes,
+  .month-detail-layout > .reserves-card {
     grid-column: 1 / -1;
   }
 

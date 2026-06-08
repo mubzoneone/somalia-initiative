@@ -1187,14 +1187,6 @@ function renderMonthDetail(key) {
   detailEl.innerHTML = `
     <div class="month-detail-layout">
 
-      <div class="reserves-card">
-        <div class="reserves-card__body">
-          <p class="reserves-card__label">Reserves</p>
-          <p class="reserves-card__value">${fmt(getMonthReserves(month))}</p>
-        </div>
-        <button type="button" class="btn btn--outline btn--sm" onclick="editMonthReserves('${key}')">Edit</button>
-      </div>
-
       <!-- DONORS -->
       <div class="card">
         <div class="section-head" id="md-don-head">
@@ -1251,6 +1243,14 @@ function renderMonthDetail(key) {
             Add Note
           </button>
         </div>
+      </div>
+
+      <div class="reserves-card">
+        <div class="reserves-card__body">
+          <p class="reserves-card__label">Reserves</p>
+          <p class="reserves-card__value">${fmt(getMonthReserves(month))}</p>
+        </div>
+        <button type="button" class="btn btn--outline btn--sm" onclick="editMonthReserves('${key}')">Edit</button>
       </div>
 
     </div>`;
