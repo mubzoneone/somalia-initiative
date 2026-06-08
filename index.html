@@ -47,7 +47,7 @@
             <path d="M9 2L4 7L9 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </button>
-        <span class="month-picker__label" id="month-label">—</span>
+        <span class="month-picker__label" id="month-label" aria-live="polite">—</span>
         <button type="button" class="month-picker__nav" id="month-next" aria-label="Next month" disabled>
           <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
             <path d="M5 2L10 7L5 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
@@ -58,13 +58,22 @@
 
     <!-- MAIN REPORT -->
     <main class="main-panel">
-      <div class="main-panel__inner" id="report-content">
-        <p class="empty-state">Loading report…</p>
+      <div
+        class="month-carousel"
+        id="month-carousel"
+        aria-roledescription="carousel"
+        aria-label="Monthly reports"
+        tabindex="0"
+      >
+        <div class="month-carousel__track" id="month-carousel-track">
+          <p class="empty-state">Loading report…</p>
+        </div>
       </div>
     </main>
   </div>
 
   <script src="data-store.js"></script>
+  <script src="public-month-carousel.js"></script>
   <script>
   (() => {
     'use strict';
@@ -124,10 +133,15 @@
       return sumVisibleDonations(month);
     }
 
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
     // ─── DOM REFS ─────────────────────────────────────────────────────────────
-    const reservesEl  = document.getElementById('reserves-value');
-    const monthLabel_ = document.getElementById('month-label');
-    const reportEl    = document.getElementById('report-content');
+    const reservesEl   = document.getElementById('reserves-value');
+    const monthLabelEl = document.getElementById('month-label');
+    const carouselEl   = document.getElementById('month-carousel');
+    const trackEl      = document.getElementById('month-carousel-track');
 
     function getSortedMonthKeys(data) {
       return Object.keys(data.months || {}).sort();
@@ -155,21 +169,25 @@
     }
 
     function updateMonthDisplay(key) {
-      monthLabel_.textContent = key ? monthLabel(key) : '—';
+      monthLabelEl.textContent = key ? monthLabel(key) : '—';
     }
 
-    // ─── RENDER REPORT ────────────────────────────────────────────────────────
-    function renderReport(key) {
+    function syncChrome(key) {
+      const data = getData();
+      updateMonthDisplay(key);
+      updateMonthNav(data, key);
+      const monthData = (data.months || {})[key];
+      reservesEl.textContent = monthData ? fmt(monthData.reserves ?? 0) : '—';
+    }
+
+    // ─── BUILD REPORT HTML ────────────────────────────────────────────────────
+    function buildReportHTML(key) {
       const data = getData();
       const monthData = (data.months || {})[key];
 
       if (!monthData) {
-        reservesEl.textContent = '—';
-        reportEl.innerHTML = `<p class="empty-state">No report for ${monthLabel(key)}.</p>`;
-        return;
+        return `<p class="empty-state">No report for ${escHtml(monthLabel(key))}.</p>`;
       }
-
-      reservesEl.textContent = fmt(monthData.reserves ?? 0);
 
       const activeRecipientIds = new Set(
         (data.recipients || []).filter(r => !r.archived).map(r => r.id)
@@ -182,7 +200,6 @@
       const paidDonorCount = countPaidDonors(monthData);
       const totalRaised = computeTotalRaised(data);
 
-      // Build family rows from visible distributions
       const rowsHTML = visibleDistributions.length
         ? visibleDistributions.map(d => `
             <li class="donation-row">
@@ -193,7 +210,6 @@
             </li>`).join('')
         : `<li class="donation-list__empty">No distributions recorded</li>`;
 
-      // Build notes
       const notesHTML = notes.length ? `
         <section class="notes-section" aria-label="Notes">
           <div class="card notes-card">
@@ -211,7 +227,7 @@
           </div>
         </section>` : '';
 
-      reportEl.innerHTML = `
+      return `
         <div class="report-layout${notes.length ? ' report-layout--has-notes' : ''}">
           <div class="stat-grid">
             <div class="card stat-card">
@@ -232,47 +248,37 @@
           </ul>
           ${notesHTML}
         </div>`;
-
-      // Animate in
-      reportEl.classList.remove('public-month-enter');
-      void reportEl.offsetWidth;
-      reportEl.classList.add('public-month-enter');
-      reportEl.addEventListener('animationend', () => {
-        reportEl.style.willChange = 'auto';
-      }, { once: true });
-    }
-
-    function escHtml(s) {
-      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
     // ─── INIT ─────────────────────────────────────────────────────────────────
     let currentMonthKey = null;
 
+    const carousel = initMonthCarousel({
+      viewport: carouselEl,
+      track: trackEl,
+      getData,
+      getAdjacentMonthKey,
+      buildReportHTML,
+      getCurrentKey: () => currentMonthKey,
+      setCurrentKey: (key) => { currentMonthKey = key; },
+      onSettle: (key) => syncChrome(key),
+    });
+
     function refreshPublicView() {
       const data = getData();
-      const key = currentMonthKey || getLatestMonthKey(data);
+      let key = currentMonthKey || getLatestMonthKey(data);
+      if (key && !(data.months || {})[key]) key = getLatestMonthKey(data);
       currentMonthKey = key;
-      updateMonthDisplay(key);
-      updateMonthNav(data, key);
-      if (key) renderReport(key);
-      else reportEl.innerHTML = '<p class="empty-state">No report available yet.</p>';
+      syncChrome(key);
+      carousel?.refresh();
     }
 
     document.getElementById('month-prev').addEventListener('click', () => {
-      const data = getData();
-      const prev = getAdjacentMonthKey(data, currentMonthKey, -1);
-      if (!prev) return;
-      currentMonthKey = prev;
-      refreshPublicView();
+      carousel?.goTo(-1);
     });
 
     document.getElementById('month-next').addEventListener('click', () => {
-      const data = getData();
-      const next = getAdjacentMonthKey(data, currentMonthKey, 1);
-      if (!next) return;
-      currentMonthKey = next;
-      refreshPublicView();
+      carousel?.goTo(1);
     });
 
     setDataChangeHandler(() => {
@@ -295,8 +301,8 @@
         await loadData();
         refreshPublicView();
       } catch (e) {
-        reportEl.innerHTML =
-          '<p class="empty-state">Unable to load reports. Check that the site is deployed on Vercel with JSONBin environment variables configured.</p>';
+        trackEl.innerHTML =
+          '<div class="month-carousel__slide"><p class="empty-state">Unable to load reports. Check that the site is deployed on Vercel with Supabase environment variables configured.</p></div>';
       }
     })();
 

@@ -22,6 +22,11 @@
   --header-content-gap: clamp(0.85rem, 2.5dvh, 1.35rem);
   --safe-top:      max(0.75rem, env(safe-area-inset-top, 0px));
   --safe-bottom:   max(0.75rem, env(safe-area-inset-bottom, 0px));
+
+  /* motion */
+  --ease-spring:     cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-ios-spring: cubic-bezier(0.33, 0.86, 0.25, 1);
+  --dur-snap:        350ms;
 }
 
 /* ─── RESET ───────────────────────────────────────────────────────────────── */
@@ -196,15 +201,57 @@ body {
   background: var(--accent);
 }
 
-.main-panel__inner {
+.main-panel .empty-state {
+  color: rgba(255,255,255,0.85);
+  font-weight: 500;
+}
+
+/* ─── MONTH CAROUSEL ──────────────────────────────────────────────────────── */
+.month-carousel {
   flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+  outline: none;
+}
+
+.month-carousel:focus-visible {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.55);
+  border-radius: var(--radius-lg);
+}
+
+.month-carousel__track {
+  display: flex;
+  height: 100%;
+  will-change: transform;
+  touch-action: pan-y;
+  backface-visibility: hidden;
+}
+
+.month-carousel.is-dragging {
+  touch-action: none;
+  user-select: none;
+  cursor: grabbing;
+}
+
+.month-carousel.is-dragging * {
+  cursor: grabbing;
+}
+
+.month-carousel__slide {
+  flex: 0 0 33.333%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
 }
 
-.main-panel .empty-state {
-  color: rgba(255,255,255,0.85);
-  font-weight: 500;
+.month-carousel__track:has(.month-carousel__slide:only-child) .month-carousel__slide {
+  flex: 0 0 100%;
+}
+
+.month-carousel__slide-spacer {
+  flex: 1;
+  min-height: 0;
 }
 
 /* ─── REPORT LAYOUT ───────────────────────────────────────────────────────── */
@@ -377,24 +424,12 @@ body {
 
 .hidden { display: none !important; }
 
-/* ─── ANIMATION ───────────────────────────────────────────────────────────── */
-@keyframes reportEnter {
-  from { transform: translateY(-8px); opacity: 0.7; }
-  to   { transform: translateY(0);    opacity: 1; }
-}
-
-.main-panel__inner.public-month-enter {
-  animation: reportEnter 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
-  will-change: transform, opacity;
-}
-
 .month-picker {
   flex-shrink: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .main-panel__inner.public-month-enter {
-    animation: none;
+  .month-carousel__track {
     will-change: auto;
   }
 }
