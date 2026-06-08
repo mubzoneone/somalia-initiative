@@ -770,8 +770,7 @@ window.openArchivedPeopleModal = function(type) {
 let _renderFrame = null;
 
 function renderActivePanel() {
-  if (activePanel === 'overview') renderOverview();
-  else if (activePanel === 'people') renderPeople();
+  if (activePanel === 'people') renderPeople();
   else if (activePanel === 'months') renderMonths();
 }
 
@@ -788,7 +787,6 @@ let activePanel = 'months';
 
 const PANEL_TITLES = {
   months: 'Reports',
-  overview: 'Overview',
   people: 'People',
 };
 
@@ -817,7 +815,6 @@ function switchTab(name) {
   document.querySelectorAll('.sidebar [data-panel]').forEach(btn => {
     btn.classList.toggle('sidebar__item--active', btn.dataset.panel === name);
   });
-  if (name === 'overview') renderOverview();
   if (name === 'people') renderPeople();
   if (name === 'months') {
     monthsView = 'home';
@@ -828,12 +825,11 @@ function switchTab(name) {
   updateHeaderTitle();
 }
 
-// ── OVERVIEW ─────────────────────────────────────────────────────────────────
-function renderOverview() {
-  const data = getData();
-  const { totalRaised, monthCount } = computeStats(data);
-
-  document.getElementById('overview-stats').innerHTML = `
+function renderReportsStats() {
+  const el = document.getElementById('reports-stats');
+  if (!el) return;
+  const { totalRaised, monthCount } = computeStats(getData());
+  el.innerHTML = `
     <div class="stat-card stat-card--accent">
       <p class="stat-card__label">Total Raised</p>
       <p class="stat-card__value">${fmt(totalRaised)}</p>
@@ -1025,6 +1021,7 @@ function reportIndexRowHtml(key, summary) {
 }
 
 function renderMonthsHome() {
+  renderReportsStats();
   const el = document.getElementById('months-home');
   if (!el) return;
   const data = getData();
@@ -1042,13 +1039,13 @@ function renderMonthsHome() {
 function showReportsHome() {
   monthsView = 'home';
   activeMonthKey = null;
-  const homeEl = document.getElementById('months-home');
+  const homeView = document.getElementById('reports-home-view');
   const detailWrap = document.getElementById('months-detail');
   if (detailWrap) detailWrap.hidden = true;
-  if (homeEl) {
-    homeEl.hidden = false;
+  if (homeView) {
+    homeView.hidden = false;
     renderMonthsHome();
-    playReportsViewEnter(homeEl, 'home');
+    playReportsViewEnter(homeView, 'home');
   }
   renderMonthHeadMenu();
 }
@@ -1058,10 +1055,10 @@ window.openMonthReport = function(key) {
   if (!data.months[key]) return;
   monthsView = 'detail';
   activeMonthKey = key;
-  const homeEl = document.getElementById('months-home');
+  const homeView = document.getElementById('reports-home-view');
   const detailWrap = document.getElementById('months-detail');
   const titleEl = document.getElementById('month-detail-title');
-  if (homeEl) homeEl.hidden = true;
+  if (homeView) homeView.hidden = true;
   if (detailWrap) {
     detailWrap.hidden = false;
     playReportsViewEnter(detailWrap, 'detail');
@@ -1089,10 +1086,10 @@ function renderMonthHeadMenu() {
 function renderMonths() {
   const data = getData();
   if (monthsView === 'detail' && activeMonthKey && data.months[activeMonthKey]) {
-    const homeEl = document.getElementById('months-home');
+    const homeView = document.getElementById('reports-home-view');
     const detailWrap = document.getElementById('months-detail');
     const titleEl = document.getElementById('month-detail-title');
-    if (homeEl) homeEl.hidden = true;
+    if (homeView) homeView.hidden = true;
     if (detailWrap) detailWrap.hidden = false;
     if (titleEl) titleEl.textContent = monthLabel(activeMonthKey);
     renderMonthHeadMenu();

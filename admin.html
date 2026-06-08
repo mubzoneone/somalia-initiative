@@ -60,7 +60,6 @@
   <aside class="drawer" id="mobile-drawer" aria-label="Admin navigation drawer" aria-hidden="true">
     <nav class="drawer__nav" aria-label="Admin sections">
       <button type="button" class="drawer__item drawer__item--active" data-panel="months" onclick="selectNavPanel('months');closeMobileDrawer()">Reports</button>
-      <button type="button" class="drawer__item" data-panel="overview" onclick="selectNavPanel('overview');closeMobileDrawer()">Overview</button>
       <button type="button" class="drawer__item" data-panel="people" onclick="selectNavPanel('people');closeMobileDrawer()">People</button>
     </nav>
     <div class="drawer__spacer" aria-hidden="true"></div>
@@ -73,7 +72,6 @@
   <aside class="sidebar" aria-label="Admin navigation">
     <nav class="sidebar__nav">
       <button type="button" class="sidebar__item sidebar__item--active" data-panel="months" onclick="selectNavPanel('months')">Reports</button>
-      <button type="button" class="sidebar__item" data-panel="overview" onclick="selectNavPanel('overview')">Overview</button>
       <button type="button" class="sidebar__item" data-panel="people" onclick="selectNavPanel('people')">People</button>
     </nav>
     <div class="sidebar__spacer" aria-hidden="true"></div>
@@ -107,13 +105,6 @@
   <!-- MAIN -->
   <main class="main" id="main">
 
-    <!-- OVERVIEW PANEL -->
-    <div class="panel hidden" id="panel-overview">
-
-      <div class="stats-grid" id="overview-stats"></div>
-
-    </div>
-
     <!-- PEOPLE PANEL -->
     <div class="panel hidden" id="panel-people">
 
@@ -142,7 +133,10 @@
     <!-- MONTHS PANEL -->
     <div class="panel" id="panel-months">
 
-      <div id="months-home"></div>
+      <div id="reports-home-view">
+        <div class="stats-grid" id="reports-stats"></div>
+        <div id="months-home"></div>
+      </div>
 
       <div id="months-detail" hidden>
         <div class="month-controls">
