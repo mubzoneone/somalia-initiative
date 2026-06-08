@@ -156,13 +156,13 @@ body {
 }
 
 .sidebar__item:hover {
-  background: var(--surface-hover);
-  color: var(--text);
+  background: var(--accent-sub);
+  color: var(--accent);
 }
 
 .sidebar__item--active {
-  background: var(--accent-sub);
-  color: var(--accent);
+  background: var(--surface-hover);
+  color: var(--text);
   font-weight: 700;
 }
 
@@ -292,13 +292,13 @@ body {
 }
 
 .drawer__item:hover {
-  background: var(--surface-hover);
-  color: var(--text);
+  background: var(--accent-sub);
+  color: var(--accent);
 }
 
 .drawer__item--active {
-  background: var(--accent-sub);
-  color: var(--accent);
+  background: var(--surface-hover);
+  color: var(--text);
   font-weight: 750;
 }
 
@@ -632,12 +632,33 @@ input[type="number"],
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  padding: 0.45rem 0.75rem;
+  padding: 0.55rem 0.75rem;
   border-bottom: 1px solid var(--border);
 }
 
-.list-row--archived .list-row__name {
-  font-weight: 500;
+.list-row--archived:last-child {
+  border-bottom: none;
+}
+
+.archived-person-row__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.archived-person-row__name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.archived-person-row__date {
+  font-size: 0.78rem;
   color: var(--muted);
 }
 
@@ -655,10 +676,6 @@ input[type="number"],
   overflow: hidden;
 }
 
-.people-archived-controls {
-  margin: 0;
-}
-
 .list-row--people-archived {
   border-top: 1.5px solid var(--border);
   cursor: pointer;
@@ -670,6 +687,8 @@ input[type="number"],
 }
 
 .list-row--people-archived .list-row__name {
+  width: auto;
+  flex: 1;
   color: var(--muted);
   font-size: 0.82rem;
   font-weight: 500;
@@ -678,6 +697,11 @@ input[type="number"],
 .list-row--people-archived .list-row__chevron {
   color: var(--muted);
   opacity: 0.85;
+}
+
+.list-row--people-archived .list-row__chevron svg {
+  width: 8px;
+  height: 14px;
 }
 
 .list-row--people-archived:hover {
@@ -935,13 +959,16 @@ input[type="number"],
   cursor: pointer;
   transition: background .12s;
 }
-.row-menu__item:hover { background: var(--bg); }
+.row-menu__item:hover {
+  background: var(--accent-sub);
+  color: var(--accent);
+}
 .row-menu__item + .row-menu__item { border-top: 1px solid var(--border); }
 .row-menu__item--danger { color: var(--danger); }
 .row-menu__item--danger:hover { background: var(--danger-sub); }
 .row-menu__item--active {
-  color: var(--accent);
-  background: var(--accent-sub);
+  color: var(--text);
+  background: var(--surface-hover);
 }
 .row-menu__item--link {
   text-decoration: none;

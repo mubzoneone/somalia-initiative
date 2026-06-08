@@ -113,6 +113,7 @@ function archiveOrRemovePerson(data, type, id) {
   if (!person) return;
   if (isPersonReferencedInReports(data, kind, id)) {
     person.archived = true;
+    person.archivedAt = new Date().toISOString();
   } else {
     purgePersonFromAllMonths(data, kind, id);
     const i = list.indexOf(person);
@@ -217,6 +218,13 @@ function orderedDistributions(data, distributions) {
 function monthLabel(key) {
   const [y, m] = key.split('-');
   return new Date(+y, +m - 1, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+}
+
+function formatArchivedDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 function monthKeyFromParts(year, month) {
@@ -702,30 +710,42 @@ function peopleListRowHtml(person, type) {
     </div>`;
 }
 
-function archivedPeopleRowHtml(person, type) {
+function archivedPeopleModalRowHtml(person, type) {
+  const dateLabel = formatArchivedDate(person.archivedAt);
+  const dateMeta = dateLabel ? `Archived ${dateLabel}` : 'Archived';
   return `
     <div class="list-row list-row--archived">
-      <span class="list-row__name">${esc(person.name)}</span>
-      <button type="button" class="btn btn--ghost btn--sm" onclick="restorePerson('${type}','${person.id}')">Restore</button>
+      <div class="archived-person-row__info">
+        <span class="archived-person-row__name">${esc(person.name)}</span>
+        <span class="archived-person-row__date">${esc(dateMeta)}</span>
+      </div>
+      <button type="button" class="btn btn--ghost btn--sm" onclick="requestRestorePerson('${type}','${person.id}')">Restore</button>
     </div>`;
 }
 
-const peopleCardView = { donor: 'active', recipient: 'active' };
+function archivedPeopleModalBodyHtml(type) {
+  const data = getData();
+  const list = type === 'donor'
+    ? (data.donors || []).filter(isPersonArchived)
+    : (data.recipients || []).filter(isPersonArchived);
+  const label = type === 'donor' ? 'donors' : 'recipients';
+  if (!list.length) {
+    return `<p class="archived-people-empty">No archived ${label}</p>`;
+  }
+  return `<div class="archived-people-list">${list.map(p => archivedPeopleModalRowHtml(p, type)).join('')}</div>`;
+}
 
-function peopleCardEls(type) {
-  const prefix = type === 'donor' ? 'donors' : 'recipients';
-  return {
-    activeView: document.getElementById(`${prefix}-active-view`),
-    archivedView: document.getElementById(`${prefix}-archived-view`),
-    activeList: document.getElementById(`${prefix}-list`),
-    archivedList: document.getElementById(`${prefix}-archived-list`),
-  };
+function refreshArchivedPeopleModal(type) {
+  if (_archivedModalType !== type || !overlay.classList.contains('overlay--open')) return;
+  const sectionLabel = type === 'donor' ? 'Archived Donors' : 'Archived Recipients';
+  modalTitle.textContent = sectionLabel;
+  modalBody.innerHTML = archivedPeopleModalBodyHtml(type);
 }
 
 function peopleArchivedRowHtml(type, count) {
   const label = count > 0 ? `Archived (${count})` : 'Archived';
   return `
-    <div class="list-row list-row--selectable list-row--nav list-row--people-archived" role="button" tabindex="0" onclick="openPeopleArchived('${type}')">
+    <div class="list-row list-row--selectable list-row--nav list-row--people-archived" role="button" tabindex="0" onclick="openArchivedPeopleModal('${type}')">
       <div class="list-row__body">
         <span class="list-row__name">${label}</span>
         <span class="list-row__chevron" aria-hidden="true">${CHEVRON_RIGHT_SVG}</span>
@@ -733,53 +753,11 @@ function peopleArchivedRowHtml(type, count) {
     </div>`;
 }
 
-function renderPeopleArchivedList(type) {
-  const { archivedList } = peopleCardEls(type);
-  if (!archivedList) return;
-  const data = getData();
-  const list = type === 'donor'
-    ? (data.donors || []).filter(isPersonArchived)
-    : (data.recipients || []).filter(isPersonArchived);
-  const label = type === 'donor' ? 'donors' : 'recipients';
-  if (!list.length) {
-    archivedList.innerHTML = `<p class="archived-people-empty">No archived ${label}</p>`;
-    return;
-  }
-  archivedList.innerHTML = list.map(p => archivedPeopleRowHtml(p, type)).join('');
-}
-
-window.openPeopleArchived = function(type) {
-  peopleCardView[type] = 'archived';
-  const { activeView, archivedView } = peopleCardEls(type);
-  if (activeView) activeView.hidden = true;
-  if (archivedView) {
-    archivedView.hidden = false;
-    renderPeopleArchivedList(type);
-    playReportsViewEnter(archivedView, 'detail');
-  }
+window.openArchivedPeopleModal = function(type) {
+  const sectionLabel = type === 'donor' ? 'Archived Donors' : 'Archived Recipients';
+  _archivedModalType = type;
+  openModal(sectionLabel, archivedPeopleModalBodyHtml(type), null, { viewOnly: true });
 };
-
-window.showPeopleActive = function(type) {
-  peopleCardView[type] = 'active';
-  const { activeView, archivedView } = peopleCardEls(type);
-  if (archivedView) archivedView.hidden = true;
-  if (activeView) {
-    activeView.hidden = false;
-    playReportsViewEnter(activeView, 'home');
-  }
-};
-
-function showPeopleHome(animate = false) {
-  ['donor', 'recipient'].forEach(type => {
-    peopleCardView[type] = 'active';
-    const { activeView, archivedView } = peopleCardEls(type);
-    if (archivedView) archivedView.hidden = true;
-    if (activeView) {
-      activeView.hidden = false;
-      if (animate) playReportsViewEnter(activeView, 'home');
-    }
-  });
-}
 
 // ── RENDER SCHEDULER ─────────────────────────────────────────────────────────
 let _renderFrame = null;
@@ -833,10 +811,7 @@ function switchTab(name) {
     btn.classList.toggle('sidebar__item--active', btn.dataset.panel === name);
   });
   if (name === 'overview') renderOverview();
-  if (name === 'people') {
-    showPeopleHome();
-    renderPeople();
-  }
+  if (name === 'people') renderPeople();
   if (name === 'months') {
     monthsView = 'home';
     activeMonthKey = null;
@@ -950,8 +925,7 @@ function renderPeople() {
   document.getElementById('recipients-title').textContent = peopleSectionTitle(recipients.length, 'Recipient');
 
   if (fp === _peopleListFingerprint) {
-    if (peopleCardView.donor === 'archived') renderPeopleArchivedList('donor');
-    if (peopleCardView.recipient === 'archived') renderPeopleArchivedList('recipient');
+    if (_archivedModalType) refreshArchivedPeopleModal(_archivedModalType);
     return;
   }
   _peopleListFingerprint = fp;
@@ -966,8 +940,7 @@ function renderPeople() {
     : '<div class="empty-row">No recipients yet</div>';
   document.getElementById('recipients-list').innerHTML = recipientsHtml + peopleArchivedRowHtml('recipient', archivedRecipients.length);
 
-  if (peopleCardView.donor === 'archived') renderPeopleArchivedList('donor');
-  if (peopleCardView.recipient === 'archived') renderPeopleArchivedList('recipient');
+  if (_archivedModalType) refreshArchivedPeopleModal(_archivedModalType);
 }
 
 document.getElementById('btn-add-donor').addEventListener('click', () => openAddPersonModal('donor'));
@@ -1010,8 +983,27 @@ window.restorePerson = function(type, id) {
   const person = list.find(p => p.id === id);
   if (!person) return;
   person.archived = false;
+  delete person.archivedAt;
   saveData(d);
   renderPeople();
+};
+
+window.requestRestorePerson = function(type, id) {
+  const d = getData();
+  const list = type === 'donor' ? d.donors : d.recipients;
+  const person = list.find(p => p.id === id);
+  if (!person) return;
+  openConfirm(
+    `Restore ${person.name}?`,
+    'They will return to your active list and can be added to future reports.',
+    () => restorePerson(type, id),
+    false,
+    'Restore',
+    {
+      reopen: () => openArchivedPeopleModal(type),
+      onCancel: () => openArchivedPeopleModal(type),
+    }
+  );
 };
 
 window.deletePerson = function(type, id) {
@@ -1349,6 +1341,7 @@ window.deleteMonth = function(key) {
 
 // ── MODAL ────────────────────────────────────────────────────────────────────
 let _onConfirm = null;
+let _archivedModalType = null;
 
 const overlay     = document.getElementById('overlay');
 const modalTitle  = document.getElementById('modal-title');
@@ -1390,7 +1383,7 @@ function openModal(title, bodyHTML, onConfirm, opts = {}) {
   document.body.style.overflow = 'hidden';
 }
 
-function openConfirm(title, message, onConfirm, isDanger = false, confirmLabel = null) {
+function openConfirm(title, message, onConfirm, isDanger = false, confirmLabel = null, opts = {}) {
   _onConfirm = onConfirm;
   modalTitle.textContent = title;
   modalBody.innerHTML    = `<p style="font-size:0.9rem;color:var(--muted);margin:0;">${esc(message)}</p>`;
@@ -1399,8 +1392,15 @@ function openConfirm(title, message, onConfirm, isDanger = false, confirmLabel =
   modalFooter.innerHTML  = `
     <button class="btn btn--ghost" id="btn-cancel">Cancel</button>
     <button class="btn ${isDanger ? 'btn--danger' : 'btn--primary'}" id="btn-confirm">${esc(actionLabel)}</button>`;
-  document.getElementById('btn-cancel').addEventListener('click', closeModal);
-  document.getElementById('btn-confirm').addEventListener('click', () => { _onConfirm && _onConfirm(); closeModal(); });
+  document.getElementById('btn-cancel').addEventListener('click', () => {
+    closeModal();
+    if (opts.onCancel) opts.onCancel();
+  });
+  document.getElementById('btn-confirm').addEventListener('click', () => {
+    if (_onConfirm) _onConfirm();
+    if (opts.reopen) opts.reopen();
+    else closeModal();
+  });
   overlay.classList.add('overlay--open');
   document.body.style.overflow = 'hidden';
 }
@@ -1409,6 +1409,7 @@ function closeModal() {
   overlay.classList.remove('overlay--open');
   document.body.style.overflow = '';
   _onConfirm = null;
+  _archivedModalType = null;
 }
 
 window.openMonthRosterManage = function(mKey, kind) {
