@@ -3,7 +3,7 @@
   'use strict';
 
   const SCHEMA_VERSION = 2;
-  const DEFAULT_MONTHLY_NOTE = '4 families received £40 each';
+  const LEGACY_DEFAULT_NOTE = '4 families received £40 each';
   const LEGACY_STORAGE_KEY = 'si_data';
   const CACHE_KEY = 'si_remote_cache';
   const CACHE_TTL_MS = 5 * 60 * 1000;
@@ -36,7 +36,7 @@
           { id: 'b3', recipientId: 'r3', amount: 40 },
           { id: 'b4', recipientId: 'r4', amount: 40 },
         ],
-        notes: [DEFAULT_MONTHLY_NOTE],
+        notes: [],
       },
       '2025-03': {
         donations: [
@@ -123,15 +123,20 @@
     return JSON.stringify(data);
   }
 
-  function ensureDefaultMonthlyNotes(data) {
-    if (data._defaultNotesMigrated) return false;
+  function removeDefaultMonthlyNotes(data) {
+    if (data._defaultNotesRemoved) return false;
+    let changed = false;
     for (const key of Object.keys(data.months || {})) {
       const month = data.months[key];
-      if (!month.notes) month.notes = [];
-      if (month.notes.length === 0) month.notes.push(DEFAULT_MONTHLY_NOTE);
+      if (!month.notes) continue;
+      const filtered = month.notes.filter((note) => note !== LEGACY_DEFAULT_NOTE);
+      if (filtered.length !== month.notes.length) {
+        month.notes = filtered;
+        changed = true;
+      }
     }
-    data._defaultNotesMigrated = true;
-    return true;
+    data._defaultNotesRemoved = true;
+    return changed;
   }
 
   function normalizeRaw(raw) {
@@ -286,7 +291,7 @@
       needsPersist = true;
     }
 
-    if (ensureDefaultMonthlyNotes(data)) needsPersist = true;
+    if (removeDefaultMonthlyNotes(data)) needsPersist = true;
 
     return { data, needsPersist };
   }
@@ -486,7 +491,6 @@
   window.addEventListener('pagehide', flushPendingSaveOnUnload);
 
   window.SI_SCHEMA_VERSION = SCHEMA_VERSION;
-  window.SI_DEFAULT_MONTHLY_NOTE = DEFAULT_MONTHLY_NOTE;
   window.SI_CACHE_TTL_MS = CACHE_TTL_MS;
   window.loadData = loadData;
   window.getData = getData;

@@ -27,8 +27,7 @@ html { -webkit-text-size-adjust: 100%; }
 
 body {
   margin: 0;
-  height: 100dvh;
-  overflow: hidden;
+  min-height: 100dvh;
   font-family: var(--font);
   font-size: 16px;
   line-height: 1.4;
@@ -39,13 +38,12 @@ body {
 /* ─── APP SHELL ───────────────────────────────────────────────────────────── */
 .app-shell {
   max-width: var(--max-width);
-  height: 100dvh;
+  min-height: 100dvh;
   margin: 0 auto;
-  display: grid;
-  grid-template-rows: var(--header-h) auto 1fr auto;
-  row-gap: var(--stack-gap);
+  display: flex;
+  flex-direction: column;
+  gap: var(--stack-gap);
   background: var(--accent);
-  overflow: hidden;
 }
 
 /* ─── HEADER ──────────────────────────────────────────────────────────────── */
@@ -151,19 +149,13 @@ body {
 
 /* ─── MAIN PANEL ──────────────────────────────────────────────────────────── */
 .main-panel {
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  padding: 0 0.75rem 0.5rem;
+  flex: 1;
+  padding: 0 0.75rem max(0.75rem, env(safe-area-inset-bottom));
   background: var(--accent);
-  overflow: hidden;
 }
 
 .main-panel__inner {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
+  display: block;
 }
 
 .main-panel .empty-state {
@@ -172,15 +164,7 @@ body {
 }
 
 /* ─── REPORT LAYOUT ───────────────────────────────────────────────────────── */
-/*
-  Grid splits the panel into three rows:
-    1. Stats (fixed, shrink-0)
-    2. Donation list (flex-fill — items scale to fill space)
-    3. Notes (fixed, only rendered when present)
-*/
 .report-layout {
-  flex: 1;
-  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: var(--stack-gap);
@@ -227,8 +211,6 @@ body {
 
 /* DONATION LIST */
 .donation-list {
-  flex: 1;
-  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: var(--stack-gap);
@@ -237,22 +219,13 @@ body {
   padding: 0;
 }
 
-/* When notes are present, list sizes to its content so notes fills the gap */
-.report-layout--has-notes .donation-list {
-  flex: 0 0 auto;
-}
-
 .donation-row {
-  flex: 1;
-  min-height: 0;
   display: flex;
   align-items: stretch;
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1.5px solid var(--border);
-  /* enforce a sensible min so rows don't collapse to nothing */
-  min-height: clamp(44px, 9dvh, 72px);
-  max-height: clamp(60px, 16dvh, 110px);
+  min-height: 52px;
 }
 
 .donation-row__info {
@@ -289,8 +262,7 @@ body {
 }
 
 .donation-list__empty {
-  flex: 1;
-  min-height: clamp(44px, 9dvh, 72px);
+  min-height: 52px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -302,16 +274,12 @@ body {
   font-style: italic;
 }
 
-/* NOTES — grows to fill any leftover space when donation list is short */
+/* NOTES */
 .notes-section {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
+  display: block;
 }
 
 .notes-card {
-  flex: 1;
   padding: clamp(0.55rem, 1.8dvh, 0.85rem) clamp(0.65rem, 3vw, 0.9rem);
 }
 
@@ -348,7 +316,7 @@ body {
 
 .site-footer {
   text-align: center;
-  padding: 0.5rem;
+  padding: 0.5rem 0.5rem max(0.5rem, env(safe-area-inset-bottom));
   font-size: 0.7rem;
   color: rgba(255,255,255,0.5);
   background: var(--accent);
@@ -374,5 +342,5 @@ body {
     --header-h: clamp(68px, 12dvh, 84px);
   }
 
-  .main-panel { padding: 0 1rem 0.75rem; }
+  .main-panel { padding: 0 1rem max(0.75rem, env(safe-area-inset-bottom)); }
 }
