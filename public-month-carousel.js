@@ -56,6 +56,23 @@
 
     function measure() {
       slideWidth = viewport.clientWidth || viewport.offsetWidth;
+      return slideWidth;
+    }
+
+    function applyLayoutAfterMount() {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const width = measure();
+          if (width === 0) {
+            requestAnimationFrame(() => {
+              measure();
+              applyTransform(getBaseOffset(), false);
+            });
+            return;
+          }
+          applyTransform(getBaseOffset(), false);
+        });
+      });
     }
 
     function neighbors(key) {
@@ -80,17 +97,16 @@
 
     function mountSlides(centerKey) {
       const { prev, next } = neighbors(centerKey);
-      const slots = [];
+
+      track.style.width = '';
 
       if (!prev && !next) {
         track.innerHTML = `
           <div class="month-carousel__slide month-carousel__slide--active" data-month-key="${centerKey}">
             ${slideHTML(centerKey)}
           </div>`;
-        track.style.width = '100%';
       } else {
         const keys = [prev || null, centerKey, next || null];
-        track.style.width = '300%';
         track.innerHTML = keys.map((key, i) => {
           const active = i === 1 ? ' month-carousel__slide--active' : '';
           const monthAttr = key ? ` data-month-key="${key}"` : '';
@@ -98,8 +114,7 @@
         }).join('');
       }
 
-      measure();
-      applyTransform(getBaseOffset(), false);
+      applyLayoutAfterMount();
     }
 
     function getBaseOffset() {
@@ -393,10 +408,10 @@
       resizeObserver = new ResizeObserver(() => {
         if (isDragging || isAnimating) return;
         const key = getCurrentKey();
-        if (key) {
-          measure();
-          applyTransform(getBaseOffset(), false);
-        }
+        if (!key) return;
+        const width = measure();
+        if (width === 0) return;
+        applyTransform(getBaseOffset(), false);
       });
       resizeObserver.observe(viewport);
     }

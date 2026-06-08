@@ -208,10 +208,11 @@ body {
 
 /* ─── MONTH CAROUSEL ──────────────────────────────────────────────────────── */
 .month-carousel {
-  flex: 1;
-  min-height: 0;
+  flex: 1 1 auto;
+  width: 100%;
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
   outline: none;
 }
 
@@ -222,7 +223,6 @@ body {
 
 .month-carousel__track {
   display: flex;
-  height: 100%;
   will-change: transform;
   touch-action: pan-y;
   backface-visibility: hidden;
@@ -239,24 +239,29 @@ body {
 }
 
 .month-carousel__slide {
-  flex: 0 0 33.333%;
+  flex: 0 0 100%;
+  width: 100%;
   min-width: 0;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
 }
 
-.month-carousel__track:has(.month-carousel__slide:only-child) .month-carousel__slide {
-  flex: 0 0 100%;
+.month-carousel__slide-spacer {
+  min-height: 1px;
 }
 
-.month-carousel__slide-spacer {
-  flex: 1;
-  min-height: 0;
+/* Prevent iOS paint glitches on transformed track */
+.month-carousel__slide .card,
+.month-carousel__slide .donation-row,
+.month-carousel__slide .stat-card,
+.month-carousel__slide .notes-card {
+  contain: none;
 }
 
 /* ─── REPORT LAYOUT ───────────────────────────────────────────────────────── */
 .report-layout {
-  flex: 1;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: var(--stack-gap);
@@ -310,8 +315,7 @@ body {
 
 /* DONATION LIST */
 .donation-list {
-  flex: 1;
-  min-height: 0;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
   gap: var(--stack-gap);
@@ -321,8 +325,6 @@ body {
 }
 
 .donation-row {
-  flex: 1;
-  min-height: 0;
   display: flex;
   align-items: stretch;
   border-radius: var(--radius-lg);
@@ -365,7 +367,6 @@ body {
 }
 
 .donation-list__empty {
-  flex: 1;
   min-height: clamp(44px, 9dvh, 72px);
   display: flex;
   align-items: center;
