@@ -158,7 +158,7 @@ body {
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  transition: background .15s, color .15s, opacity .15s;
+  transition: background .15s, color .15s;
 }
 
 .month-picker__nav:hover:not(:disabled) {
@@ -167,9 +167,9 @@ body {
 }
 
 .month-picker__nav:disabled {
-  opacity: 0.3;
+  visibility: hidden;
+  pointer-events: none;
   cursor: default;
-  color: var(--muted);
 }
 
 .month-picker__nav svg {
