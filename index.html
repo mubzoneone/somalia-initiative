@@ -287,14 +287,12 @@
 
     window.addEventListener('pageshow', (e) => {
       if (!e.persisted) return;
-      loadData({ awaitNetwork: true })
-        .then(() => { if (isDataReady()) refreshPublicView(); })
-        .catch(() => {});
+      loadData({ background: true, force: true }).catch(() => {});
     });
 
     (async () => {
       try {
-        await loadData({ awaitNetwork: true });
+        await loadData();
         refreshPublicView();
       } catch (e) {
         reportEl.innerHTML =

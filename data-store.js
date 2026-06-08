@@ -643,6 +643,7 @@
   }
 
   syncHydrateFromDisk();
+  revalidateFromNetwork({ silent: true, force: true }).catch(() => {});
 
   window.addEventListener('beforeunload', flushPendingSaveOnUnload);
   window.addEventListener('pagehide', flushPendingSaveOnUnload);

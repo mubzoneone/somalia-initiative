@@ -1532,15 +1532,13 @@ function runAdminInit() {
 
   window.addEventListener('pageshow', (e) => {
     if (!e.persisted) return;
-    loadData({ awaitNetwork: true })
-      .then(() => { if (isDataReady()) scheduleActivePanelRender(); })
-      .catch(() => {});
+    loadData({ background: true, force: true }).catch(() => {});
   });
 
   (async () => {
     if (!isDataReady()) showLoadState('loading');
     try {
-      await loadData({ awaitNetwork: true });
+      await loadData();
     } catch (e) {
       showLoadState('error', e.message);
       return;
