@@ -1121,9 +1121,7 @@ document.getElementById('month-detail').addEventListener('keydown', e => {
 document.getElementById('btn-new-month').addEventListener('click', () => {
   const data = getData();
   const suggested = suggestedNewMonthParts(data);
-  const copyHint = `<p class="manage-roster-note" style="margin:0 0 0.5rem;">Recipients are included automatically. Reserves start at £0. Use <strong>Manage list</strong> under Donors to choose who donated. Use <strong>Manage list</strong> under Recipients only to remove someone from this month.</p>`;
   openModal('New Report', `
-    ${copyHint}
     <div class="field">
       <label class="field__label" for="inp-year">Year</label>
       <input class="field__input" id="inp-year" type="number" inputmode="numeric" min="2020" max="2099" value="${suggested.year}">
@@ -1173,7 +1171,6 @@ function renderMonthDetail(key) {
 
   ensureMonthHidden(month);
   ensureMonthReserves(month);
-  if (ensureMonthRecipients(month, data)) saveData(data);
 
   const donations     = orderedDonations(data, month.donations || []);
   const distributions = orderedDistributions(data, month.distributions || []);
@@ -1428,16 +1425,12 @@ window.openMonthRosterManage = function(mKey, kind) {
   const personKind = isRecipients ? 'recipient' : 'donor';
   const sectionLabel = isRecipients ? 'Recipients' : 'Donors';
   const title = `${sectionLabel} on ${monthLabel(mKey)}`;
-  const rosterNote = isRecipients
-    ? 'Uncheck names to remove them from this report.'
-    : 'Selected names appear on this report.';
   const listHtml = rosterPillsHtml(people, {
     isChecked: p => !isPersonHidden(month, personKind, p.id),
     emptyMessage: `No ${isRecipients ? 'recipients' : 'donors'} on the People tab yet.`,
   });
 
   openModal(title, `
-    <p class="manage-roster-note">${rosterNote}</p>
     <div class="manage-roster-list">${listHtml}</div>`,
     () => {
       const d = getData();
@@ -1445,6 +1438,7 @@ window.openMonthRosterManage = function(mKey, kind) {
       if (!m) return;
       applyMonthRosterFromCheckboxes(m, people, personKind, 'manage-roster-toggle');
       saveData(d);
+      flushPendingSave().catch(() => {});
       if (personKind === 'donor') refreshDonationsSection(mKey);
       else refreshDistributionsSection(mKey);
     }
@@ -1533,7 +1527,7 @@ function runAdminInit() {
 
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState !== 'visible') return;
-    loadData({ background: true }).catch(() => {});
+    loadData({ background: true, force: true }).catch(() => {});
   });
 
   (async () => {

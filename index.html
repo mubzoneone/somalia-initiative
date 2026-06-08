@@ -279,7 +279,7 @@
 
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState !== 'visible') return;
-      loadData({ background: true }).catch(() => {});
+      loadData({ background: true, force: true }).catch(() => {});
     });
 
     (async () => {

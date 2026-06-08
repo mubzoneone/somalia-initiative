@@ -192,11 +192,10 @@
     ensureMonthHidden(month);
     if (!month.distributions) month.distributions = [];
 
-    const visible = active.filter(r => !isRecipientHidden(month, r.id));
-    const allHidden = active.every(r => isRecipientHidden(month, r.id));
+    const configured = month.hiddenRecipients.length > 0;
+    const uninitialized = !configured && month.distributions.length === 0;
 
-    if (visible.length === 0 && allHidden) {
-      month.hiddenRecipients = [];
+    if (uninitialized) {
       active.forEach(r => {
         if (!month.distributions.some(d => d.recipientId === r.id)) {
           month.distributions.push({ id: newDistributionId(), recipientId: r.id, amount: 0 });
@@ -289,7 +288,6 @@
         JSON.stringify({ data: deepClone(data), savedAt })
       );
       _cacheSavedAt = savedAt;
-      markNetworkFresh();
     } catch { /* ignore quota errors */ }
   }
 
@@ -421,6 +419,7 @@
     try {
       await putBinRecord(data, false);
       writeLocalCacheNow(data);
+      markNetworkFresh();
       setSaveStatus('saved');
     } catch (err) {
       setSaveStatus('error', err.message);
@@ -452,6 +451,7 @@
     }
 
     applyCacheUpdate(data, true);
+    markNetworkFresh();
     _loadError = null;
     return data;
   }
@@ -483,6 +483,7 @@
         await putBinRecord(payload, keepalive);
         writeLocalCacheNow(payload);
         _cache = payload;
+        markNetworkFresh();
         setSaveStatus('saved');
       } catch (err) {
         _pendingSaveData = data;
@@ -598,6 +599,7 @@
     try {
       await putBinRecord(data, true);
       writeLocalCacheNow(data);
+      markNetworkFresh();
       setSaveStatus('saved');
     } catch (err) {
       _pendingSaveData = data;
