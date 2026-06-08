@@ -167,7 +167,7 @@
         </section>` : '';
 
       reportEl.innerHTML = `
-        <div class="report-layout">
+        <div class="report-layout${notes.length ? ' report-layout--has-notes' : ''}">
           <div class="stat-grid">
             <div class="card stat-card">
               <p class="stat-card__label">Total raised</p>

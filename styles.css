@@ -150,12 +150,16 @@ body {
 /* ─── MAIN PANEL ──────────────────────────────────────────────────────────── */
 .main-panel {
   flex: 1;
+  display: flex;
+  flex-direction: column;
   padding: 0 0.75rem max(0.75rem, env(safe-area-inset-bottom));
   background: var(--accent);
 }
 
 .main-panel__inner {
-  display: block;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .main-panel .empty-state {
@@ -165,6 +169,7 @@ body {
 
 /* ─── REPORT LAYOUT ───────────────────────────────────────────────────────── */
 .report-layout {
+  flex: 1;
   display: flex;
   flex-direction: column;
   gap: var(--stack-gap);
@@ -211,6 +216,8 @@ body {
 
 /* DONATION LIST */
 .donation-list {
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: var(--stack-gap);
@@ -219,13 +226,20 @@ body {
   padding: 0;
 }
 
+.report-layout--has-notes .donation-list {
+  flex: 0 0 auto;
+}
+
 .donation-row {
+  flex: 1;
+  min-height: 0;
   display: flex;
   align-items: stretch;
   border-radius: var(--radius-lg);
   overflow: hidden;
   border: 1.5px solid var(--border);
-  min-height: 52px;
+  min-height: clamp(44px, 9dvh, 72px);
+  max-height: clamp(60px, 16dvh, 110px);
 }
 
 .donation-row__info {
@@ -262,7 +276,8 @@ body {
 }
 
 .donation-list__empty {
-  min-height: 52px;
+  flex: 1;
+  min-height: clamp(44px, 9dvh, 72px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -276,10 +291,14 @@ body {
 
 /* NOTES */
 .notes-section {
-  display: block;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .notes-card {
+  flex: 1;
   padding: clamp(0.55rem, 1.8dvh, 0.85rem) clamp(0.65rem, 3vw, 0.9rem);
 }
 
