@@ -730,13 +730,6 @@ input[type="number"],
   gap: 0.35rem;
 }
 
-.manage-roster-note {
-  font-size: 0.82rem;
-  color: var(--muted);
-  margin: 0 0 0.75rem;
-  line-height: 1.45;
-}
-
 .manage-roster-list {
   max-height: 50vh;
   overflow-y: auto;
@@ -757,6 +750,9 @@ input[type="number"],
 
 .manage-roster-note--empty {
   margin: 0;
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.45;
 }
 
 .section-note {
