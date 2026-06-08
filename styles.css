@@ -51,6 +51,12 @@ body {
   flex-direction: column;
   gap: var(--stack-gap);
   background: var(--accent);
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  touch-action: pan-y;
 }
 
 /* ─── HEADER ──────────────────────────────────────────────────────────────── */
@@ -63,11 +69,6 @@ body {
   background: var(--accent);
   color: var(--white);
   flex-shrink: 0;
-  position: sticky;
-  top: 0;
-  z-index: 30;
-  transform: translateZ(0);
-  backface-visibility: hidden;
 }
 
 .header__star {
@@ -127,8 +128,6 @@ body {
 
 /* ─── MONTH PICKER ────────────────────────────────────────────────────────── */
 .month-picker {
-  position: relative;
-  z-index: 20;
   padding: 0 0.75rem;
   background: var(--accent);
 }
@@ -190,22 +189,13 @@ body {
 
 /* ─── MAIN PANEL ──────────────────────────────────────────────────────────── */
 .main-panel {
-  flex: 1;
-  min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-  overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
-  scrollbar-gutter: stable;
-  touch-action: pan-y;
   padding: 0 0.75rem 0.75rem;
   background: var(--accent);
 }
 
 .main-panel__inner {
-  flex: 1;
   display: flex;
   flex-direction: column;
 }
