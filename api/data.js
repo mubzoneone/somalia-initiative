@@ -39,15 +39,6 @@ function readJsonBody(req) {
 }
 
 module.exports = async function handler(req, res) {
-  try {
-    return await _handler(req, res);
-  } catch (err) {
-    console.error('[api/data] unhandled error:', err);
-    return sendJson(res, 500, { error: `Unhandled error: ${err.message}` });
-  }
-};
-
-async function _handler(req, res) {
   const env = getSupabaseEnv();
   if (!env) {
     return sendJson(res, 500, { error: 'Server not configured' });
@@ -75,8 +66,8 @@ async function _handler(req, res) {
 
       res.setHeader('Cache-Control', 'private, max-age=0, must-revalidate');
       return sendJson(res, 200, { record: record ?? null });
-    } catch (err) {
-      return sendJson(res, 502, { error: `Failed to reach data store: ${err.message}` });
+    } catch {
+      return sendJson(res, 502, { error: 'Failed to reach data store' });
     }
   }
 
@@ -116,8 +107,8 @@ async function _handler(req, res) {
       }
 
       return sendJson(res, 200, { ok: true });
-    } catch (err) {
-      return sendJson(res, 502, { error: `Failed to reach data store: ${err.message}` });
+    } catch {
+      return sendJson(res, 502, { error: 'Failed to reach data store' });
     }
   }
 
