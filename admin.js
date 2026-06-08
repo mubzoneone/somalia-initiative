@@ -363,17 +363,48 @@ function invalidateDerivedCache() {
 
 // ── ROW KEBAB MENU ───────────────────────────────────────────────────────────
 const KEBAB_SVG = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="3" r="1.25" fill="currentColor"/><circle cx="7" cy="7" r="1.25" fill="currentColor"/><circle cx="7" cy="11" r="1.25" fill="currentColor"/></svg>';
+const ARCHIVE_SVG = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 5.5h8v6.5a1 1 0 01-1 1H4a1 1 0 01-1-1V5.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M5.5 5.5V4.2a1.3 1.3 0 013 0V5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 8h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
 const CHEVRON_RIGHT_SVG = '<svg viewBox="0 0 8 14" fill="none" aria-hidden="true"><path d="M1 2L6 7L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const CHEVRON_LEFT_SVG = '<svg viewBox="0 0 10 16" fill="none" aria-hidden="true"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const IOS_SPRING = 'spring(3, 1000, 500, 0)';
+const NAV_PUSH_MS = 500;
+const NAV_POP_MS = 430;
+
+function prefersReducedMotion() {
+  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
 
 function playReportsViewEnter(el, variant) {
-  if (!el) return;
+  if (!el || prefersReducedMotion()) return;
+
   el.classList.remove('reports-view--enter--home', 'reports-view--enter--detail');
+
+  const isPush = variant === 'detail';
+  const offset = isPush ? 30 : -24;
+  const duration = isPush ? NAV_PUSH_MS : NAV_POP_MS;
+
+  const clearInline = () => {
+    el.style.opacity = '';
+    el.style.transform = '';
+  };
+
+  if (typeof el.animate === 'function') {
+    el.getAnimations().forEach(a => a.cancel());
+    const anim = el.animate(
+      [
+        { transform: `translateX(${offset}px)`, opacity: 0.92 },
+        { transform: 'translateX(0)', opacity: 1 },
+      ],
+      { duration, easing: IOS_SPRING, fill: 'both' }
+    );
+    anim.finished.then(clearInline).catch(clearInline);
+    return;
+  }
+
   void el.offsetWidth;
-  el.classList.add(variant === 'home' ? 'reports-view--enter--home' : 'reports-view--enter--detail');
+  el.classList.add(isPush ? 'reports-view--enter--detail' : 'reports-view--enter--home');
   el.addEventListener('animationend', () => {
     el.classList.remove('reports-view--enter--home', 'reports-view--enter--detail');
-    el.style.willChange = 'auto';
   }, { once: true });
 }
 function getLatestMonthKey(data) {
@@ -690,6 +721,12 @@ function archivedPeopleModalBodyHtml(type) {
   return `<div class="archived-people-list manage-roster-list">${list.map(p => archivedPeopleModalRowHtml(p, type)).join('')}</div>`;
 }
 
+function injectArchiveButtonIcons() {
+  [document.getElementById('btn-archived-donors'), document.getElementById('btn-archived-recipients')].forEach(btn => {
+    if (btn) btn.innerHTML = ARCHIVE_SVG;
+  });
+}
+
 function updateArchivedPeopleButtons(archivedDonors, archivedRecipients) {
   const donorBtn = document.getElementById('btn-archived-donors');
   const recipientBtn = document.getElementById('btn-archived-recipients');
@@ -873,6 +910,7 @@ function renderPeople() {
 
   document.getElementById('donors-title').textContent = peopleSectionTitle(donors.length, 'Donor');
   document.getElementById('recipients-title').textContent = peopleSectionTitle(recipients.length, 'Recipient');
+  injectArchiveButtonIcons();
   updateArchivedPeopleButtons(archivedDonors, archivedRecipients);
 
   if (fp === _peopleListFingerprint) return;
@@ -1449,6 +1487,7 @@ setSaveStatusHandler((status, message) => {
 
 // ── INIT (after passcode / session) ───────────────────────────────────────────
 function runAdminInit() {
+  injectArchiveButtonIcons();
   setDataChangeHandler(() => {
     if (!isDataReady()) return;
     invalidateDerivedCache();

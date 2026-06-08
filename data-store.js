@@ -1,4 +1,4 @@
-/* Somalia Initiative Tracker — shared JSONBin.io data layer */
+/* Somalia Initiative Tracker — shared data layer */
 (function () {
   'use strict';
 

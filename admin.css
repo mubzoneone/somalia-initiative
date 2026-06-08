@@ -32,8 +32,16 @@
   --shadow-lg:    0 12px 40px rgba(0,0,0,0.18);
   --ease-spring:  cubic-bezier(0.22, 1, 0.36, 1);
   --ease-out:     cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-ios-spring: cubic-bezier(0.33, 0.86, 0.25, 1);
   --dur-fast:     0.18s;
   --dur-med:      0.32s;
+  --spring-mass:       3;
+  --spring-stiffness:  1000;
+  --spring-damping:    500;
+  --dur-nav-push:      500ms;
+  --dur-nav-pop:       430ms;
+  --dur-row-stagger:   50ms;
+  --dur-row-in:        450ms;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -244,7 +252,7 @@ body {
   border-right: 1.5px solid var(--border);
   z-index: 9001;
   transform: translateX(-104%);
-  transition: transform .28s cubic-bezier(0.22,1,0.36,1);
+  transition: transform var(--dur-nav-pop) var(--ease-ios-spring);
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow-md);
@@ -1099,40 +1107,40 @@ input[type="number"],
 
 /* ── REPORTS VIEW MOTION ───────────────────────────────────────────────────── */
 @keyframes reportsSlideIn {
-  from { opacity: 0.6; transform: translateX(12px); }
+  from { opacity: 0.92; transform: translateX(30px); }
   to   { opacity: 1;   transform: translateX(0); }
 }
 
 @keyframes reportsSlideInHome {
-  from { opacity: 0.6; transform: translateX(-8px); }
+  from { opacity: 0.92; transform: translateX(-24px); }
   to   { opacity: 1;   transform: translateX(0); }
 }
 
 @keyframes reportsRowIn {
-  from { opacity: 0; transform: translateY(6px); }
+  from { opacity: 0.85; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 .reports-view--enter--detail {
-  animation: reportsSlideIn var(--dur-med) var(--ease-spring) both;
+  animation: reportsSlideIn var(--dur-nav-push) var(--ease-ios-spring) both;
 }
 
 .reports-view--enter--home {
-  animation: reportsSlideInHome var(--dur-med) var(--ease-spring) both;
+  animation: reportsSlideInHome var(--dur-nav-pop) var(--ease-ios-spring) both;
 }
 
 .reports-home__list .list-row--report {
-  animation: reportsRowIn var(--dur-med) var(--ease-spring) both;
+  animation: reportsRowIn var(--dur-row-in) var(--ease-ios-spring) both;
 }
 
 .reports-home__list .list-row--report:nth-child(1) { animation-delay: 0ms; }
-.reports-home__list .list-row--report:nth-child(2) { animation-delay: 40ms; }
-.reports-home__list .list-row--report:nth-child(3) { animation-delay: 80ms; }
-.reports-home__list .list-row--report:nth-child(4) { animation-delay: 120ms; }
-.reports-home__list .list-row--report:nth-child(5) { animation-delay: 160ms; }
-.reports-home__list .list-row--report:nth-child(6) { animation-delay: 200ms; }
-.reports-home__list .list-row--report:nth-child(7) { animation-delay: 240ms; }
-.reports-home__list .list-row--report:nth-child(8) { animation-delay: 280ms; }
+.reports-home__list .list-row--report:nth-child(2) { animation-delay: calc(var(--dur-row-stagger) * 1); }
+.reports-home__list .list-row--report:nth-child(3) { animation-delay: calc(var(--dur-row-stagger) * 2); }
+.reports-home__list .list-row--report:nth-child(4) { animation-delay: calc(var(--dur-row-stagger) * 3); }
+.reports-home__list .list-row--report:nth-child(5) { animation-delay: calc(var(--dur-row-stagger) * 4); }
+.reports-home__list .list-row--report:nth-child(6) { animation-delay: calc(var(--dur-row-stagger) * 5); }
+.reports-home__list .list-row--report:nth-child(7) { animation-delay: calc(var(--dur-row-stagger) * 6); }
+.reports-home__list .list-row--report:nth-child(8) { animation-delay: calc(var(--dur-row-stagger) * 7); }
 
 /* ── BUTTONS ─────────────────────────────────────────────────────────────── */
 .btn {
@@ -1193,7 +1201,7 @@ input[type="number"],
   border-radius: var(--radius-lg) var(--radius-lg) 0 0;
   box-shadow: var(--shadow-lg);
   transform: translateY(100%);
-  transition: transform .3s cubic-bezier(0.22,1,0.36,1);
+  transition: transform var(--dur-nav-push) var(--ease-ios-spring);
   max-height: 90dvh;
   display: flex;
   flex-direction: column;
