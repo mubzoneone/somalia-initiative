@@ -20,6 +20,8 @@
   --header-h:      clamp(68px, 13dvh, 88px);
   --stack-gap:     clamp(0.4rem, 1.2dvh, 0.75rem);
   --header-content-gap: clamp(0.85rem, 2.5dvh, 1.35rem);
+  --safe-top:      max(0.75rem, env(safe-area-inset-top, 0px));
+  --safe-bottom:   max(0.75rem, env(safe-area-inset-bottom, 0px));
 }
 
 /* ─── RESET ───────────────────────────────────────────────────────────────── */
@@ -43,6 +45,8 @@ body {
   height: 100dvh;
   min-height: 0;
   margin: 0 auto;
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
   display: flex;
   flex-direction: column;
   gap: var(--stack-gap);
@@ -55,7 +59,7 @@ body {
   grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: 0.65rem;
-  padding: 0 1rem var(--header-content-gap);
+  padding: 0.25rem 1rem var(--header-content-gap);
   background: var(--accent);
   color: var(--white);
   flex-shrink: 0;
@@ -196,7 +200,7 @@ body {
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
   touch-action: pan-y;
-  padding: 0 0.75rem max(0.75rem, env(safe-area-inset-bottom));
+  padding: 0 0.75rem 0.75rem;
   background: var(--accent);
 }
 
@@ -277,10 +281,6 @@ body {
   padding: 0;
 }
 
-.report-layout--has-notes .donation-list {
-  flex: 0 0 auto;
-}
-
 .donation-row {
   flex: 1;
   min-height: 0;
@@ -290,7 +290,6 @@ body {
   overflow: hidden;
   border: 1.5px solid var(--border);
   min-height: clamp(44px, 9dvh, 72px);
-  max-height: clamp(60px, 16dvh, 110px);
 }
 
 .donation-row__info {
@@ -342,14 +341,13 @@ body {
 
 /* NOTES */
 .notes-section {
-  flex: 1;
-  min-height: 0;
+  flex: 0 0 auto;
   display: flex;
   flex-direction: column;
 }
 
 .notes-card {
-  flex: 1;
+  flex: 0 0 auto;
   padding: clamp(0.55rem, 1.8dvh, 0.85rem) clamp(0.65rem, 3vw, 0.9rem);
 }
 
@@ -378,20 +376,11 @@ body {
 .notes-card__list li { margin-bottom: 0.2rem; }
 .notes-card__list li:last-child { margin-bottom: 0; }
 
-/* ─── EMPTY & FOOTER ──────────────────────────────────────────────────────── */
+/* ─── EMPTY ───────────────────────────────────────────────────────────────── */
 .empty-state {
   text-align: center;
   padding: 2rem 1rem;
   color: var(--text-muted);
-}
-
-.site-footer {
-  text-align: center;
-  padding: 0.5rem 0.5rem max(0.5rem, env(safe-area-inset-bottom));
-  font-size: 0.7rem;
-  color: rgba(255,255,255,0.5);
-  background: var(--accent);
-  flex-shrink: 0;
 }
 
 .hidden { display: none !important; }
@@ -411,10 +400,6 @@ body {
   flex-shrink: 0;
 }
 
-.site-footer {
-  flex-shrink: 0;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .main-panel__inner.public-month-enter {
     animation: none;
@@ -428,5 +413,7 @@ body {
     --header-h: clamp(68px, 12dvh, 84px);
   }
 
-  .main-panel { padding: 0 1rem max(0.75rem, env(safe-area-inset-bottom)); }
+  .main-panel { padding: 0 1rem 0.75rem; }
+
+  .donation-row { max-height: 96px; }
 }
