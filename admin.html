@@ -900,7 +900,14 @@ body {
 .stat-card--accent .stat-card__label { color: rgba(255,255,255,0.75); }
 .stat-card--accent .stat-card__value { color: var(--on-accent); }
 
-/* ── RESERVES CARD ───────────────────────────────────────────────────────── */
+/* ── OVERVIEW CARDS ──────────────────────────────────────────────────────── */
+.overview-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin-bottom: 0.6rem;
+}
+
 .reserves-card {
   background: var(--surface);
   border: 1.5px solid var(--border);
@@ -1701,12 +1708,21 @@ html.si-admin-auth-pending .passcode-brand {
     <!-- OVERVIEW PANEL -->
     <div class="panel hidden" id="panel-overview">
 
-      <div class="reserves-card">
-        <div class="reserves-card__body">
-          <p class="reserves-card__label">Current Reserves</p>
-          <p class="reserves-card__value" id="reserves-display">—</p>
+      <div class="overview-cards">
+        <div class="reserves-card">
+          <div class="reserves-card__body">
+            <p class="reserves-card__label">Current Reserves</p>
+            <p class="reserves-card__value" id="reserves-display">—</p>
+          </div>
+          <button class="btn btn--outline btn--sm" id="btn-edit-reserves">Edit</button>
         </div>
-        <button class="btn btn--outline btn--sm" id="btn-edit-reserves">Edit</button>
+        <div class="reserves-card">
+          <div class="reserves-card__body">
+            <p class="reserves-card__label">Legacy funds</p>
+            <p class="reserves-card__value" id="legacy-funds-display">—</p>
+          </div>
+          <button class="btn btn--outline btn--sm" id="btn-edit-legacy-funds">Edit</button>
+        </div>
       </div>
 
       <div class="stats-grid" id="overview-stats"></div>
@@ -2273,9 +2289,21 @@ function getSelectedPillValue(name) {
 }
 
 // ── COMPUTED STATS ───────────────────────────────────────────────────────────
+function sumVisibleDonations(month) {
+  return (month.donations || [])
+    .filter(d => !isPersonHidden(month, 'donor', d.donorId))
+    .reduce((s, d) => s + Number(d.amount), 0);
+}
+
+function computeTotalRaised(data) {
+  const fromReports = Object.values(data.months || {})
+    .reduce((s, m) => s + sumVisibleDonations(m), 0);
+  return Number(data.legacyFunds ?? 0) + fromReports;
+}
+
 function computeStats(data) {
   const months = Object.values(data.months || {});
-  const totalRaised = sum(months.flatMap(m => (m.donations || []).map(d => d.amount)));
+  const totalRaised = computeTotalRaised(data);
   const totalSent   = sum(months.flatMap(m => (m.distributions || []).map(d => d.amount)));
   return { totalRaised, totalSent, monthCount: months.length };
 }
@@ -2556,6 +2584,7 @@ function renderOverview() {
   const { totalRaised, totalSent, monthCount } = computeStats(data);
 
   document.getElementById('reserves-display').textContent = fmt(data.reserves ?? 0);
+  document.getElementById('legacy-funds-display').textContent = fmt(data.legacyFunds ?? 0);
 
   document.getElementById('overview-stats').innerHTML = `
     <div class="stat-card stat-card--accent">
@@ -2590,6 +2619,26 @@ document.getElementById('btn-edit-reserves').addEventListener('click', () => {
       const val = parseFloat(document.getElementById('inp-reserves').value);
       if (isNaN(val) || val < 0) return alert('Please enter a valid amount.');
       const d = getData(); d.reserves = val; saveData(d);
+      renderOverview();
+    }
+  );
+});
+
+document.getElementById('btn-edit-legacy-funds').addEventListener('click', () => {
+  const data = getData();
+  openModal('Edit Legacy Funds', `
+    <p class="manage-roster-note" style="margin:0 0 0.75rem;">Pre-tracker total included in Total raised.</p>
+    <div class="field" style="margin-bottom:0;">
+      <label class="field__label" for="inp-legacy-funds">Legacy funds</label>
+      <div class="field__prefix-wrap">
+        <span class="field__prefix">£</span>
+        <input class="field__input field__input--prefixed" id="inp-legacy-funds" type="number" min="0" step="0.01" value="${data.legacyFunds ?? 0}">
+      </div>
+    </div>`,
+    () => {
+      const val = parseFloat(document.getElementById('inp-legacy-funds').value);
+      if (isNaN(val) || val < 0) return alert('Please enter a valid amount.');
+      const d = getData(); d.legacyFunds = val; saveData(d);
       renderOverview();
     }
   );

@@ -12,6 +12,7 @@
   const SEED = {
     version: SCHEMA_VERSION,
     reserves: 1,
+    legacyFunds: 0,
     donors: [
       { id: 'd1', name: 'Amina Hassan' },
       { id: 'd2', name: 'Omar Farah' },
@@ -145,12 +146,14 @@
       raw.version = SCHEMA_VERSION;
       if (!raw.donors) raw.donors = [];
       if (!raw.recipients) raw.recipients = [];
+      if (raw.legacyFunds == null) raw.legacyFunds = 0;
       return raw;
     }
     if (raw.months) {
       const migrated = cloneSeed();
       migrated.months = raw.months;
       migrated.reserves = raw.reserves ?? SEED.reserves;
+      migrated.legacyFunds = raw.legacyFunds ?? 0;
       if (raw.donors?.length) migrated.donors = raw.donors;
       if (raw.recipients?.length) migrated.recipients = raw.recipients;
       return migrated;

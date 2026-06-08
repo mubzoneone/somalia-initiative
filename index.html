@@ -41,9 +41,19 @@
 
     <!-- CURRENT MONTH -->
     <div class="month-picker" id="month-picker">
-      <div class="month-picker__pill month-picker__pill--static" id="month-display">
+      <button type="button" class="month-picker__nav" id="month-prev" aria-label="Previous month" disabled>
+        <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M9 2L4 7L9 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <div class="month-picker__pill" id="month-display">
         <span class="month-picker__label" id="month-label">—</span>
       </div>
+      <button type="button" class="month-picker__nav" id="month-next" aria-label="Next month" disabled>
+        <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M5 2L10 7L5 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
     </div>
 
     <!-- MAIN REPORT -->
@@ -91,10 +101,30 @@
       return (month.hiddenDonors || []).includes(donorId);
     }
 
+    function isRecipientHidden(month, recipientId) {
+      return (month.hiddenRecipients || []).includes(recipientId);
+    }
+
     function countPaidDonors(month) {
       return (month.donations || []).filter(
         d => !isDonorHidden(month, d.donorId) && Number(d.amount) > 0
       ).length;
+    }
+
+    function sumVisibleDonations(month) {
+      return (month.donations || [])
+        .filter(d => !isDonorHidden(month, d.donorId))
+        .reduce((s, d) => s + Number(d.amount), 0);
+    }
+
+    function computeTotalRaised(data) {
+      const fromReports = Object.values(data.months || {})
+        .reduce((s, m) => s + sumVisibleDonations(m), 0);
+      return Number(data.legacyFunds ?? 0) + fromReports;
+    }
+
+    function computeMonthRaised(month) {
+      return sumVisibleDonations(month);
     }
 
     // ─── DOM REFS ─────────────────────────────────────────────────────────────
@@ -102,9 +132,29 @@
     const monthLabel_ = document.getElementById('month-label');
     const reportEl    = document.getElementById('report-content');
 
+    function getSortedMonthKeys(data) {
+      return Object.keys(data.months || {}).sort();
+    }
+
     function getLatestMonthKey(data) {
-      const keys = Object.keys(data.months || {}).sort();
+      const keys = getSortedMonthKeys(data);
       return keys.length ? keys[keys.length - 1] : null;
+    }
+
+    function getAdjacentMonthKey(data, key, delta) {
+      const keys = getSortedMonthKeys(data);
+      const i = keys.indexOf(key);
+      if (i === -1) return null;
+      return keys[i + delta] ?? null;
+    }
+
+    function updateMonthNav(data, key) {
+      const prevBtn = document.getElementById('month-prev');
+      const nextBtn = document.getElementById('month-next');
+      if (!prevBtn || !nextBtn) return;
+      const hasKey = !!key;
+      prevBtn.disabled = !hasKey || !getAdjacentMonthKey(data, key, -1);
+      nextBtn.disabled = !hasKey || !getAdjacentMonthKey(data, key, 1);
     }
 
     function updateMonthDisplay(key) {
@@ -124,22 +174,21 @@
         return;
       }
 
-      const distributions = monthData.distributions || [];
-      const notes         = monthData.notes || [];
+      const visibleDistributions = (monthData.distributions || [])
+        .filter(d => !isRecipientHidden(monthData, d.recipientId));
+      const notes = monthData.notes || [];
 
-      // "This month" = total sent to recipients
-      const thisMonth = distributions.reduce((s, d) => s + Number(d.amount), 0);
+      // "This month" = donor donations raised this month
+      const thisMonth = computeMonthRaised(monthData);
 
       const paidDonorCount = countPaidDonors(monthData);
 
-      // "Total raised" = sum of all donor contributions across all months
-      const totalRaised = Object.values(data.months || {})
-        .flatMap(m => m.donations || [])
-        .reduce((s, d) => s + Number(d.amount), 0);
+      // "Total raised" = legacy baseline + all visible donor contributions
+      const totalRaised = computeTotalRaised(data);
 
-      // Build family rows from distributions
-      const rowsHTML = distributions.length
-        ? distributions.map(d => `
+      // Build family rows from visible distributions
+      const rowsHTML = visibleDistributions.length
+        ? visibleDistributions.map(d => `
             <li class="donation-row">
               <div class="donation-row__info">
                 <p class="donation-row__name">${escHtml(recipientName(data, d.recipientId))}</p>
@@ -206,9 +255,26 @@
       const key = currentMonthKey || getLatestMonthKey(data);
       currentMonthKey = key;
       updateMonthDisplay(key);
+      updateMonthNav(data, key);
       if (key) renderReport(key);
       else reportEl.innerHTML = '<p class="empty-state">No report available yet.</p>';
     }
+
+    document.getElementById('month-prev').addEventListener('click', () => {
+      const data = getData();
+      const prev = getAdjacentMonthKey(data, currentMonthKey, -1);
+      if (!prev) return;
+      currentMonthKey = prev;
+      refreshPublicView();
+    });
+
+    document.getElementById('month-next').addEventListener('click', () => {
+      const data = getData();
+      const next = getAdjacentMonthKey(data, currentMonthKey, 1);
+      if (!next) return;
+      currentMonthKey = next;
+      refreshPublicView();
+    });
 
     setDataChangeHandler(() => {
       if (!isDataReady()) return;

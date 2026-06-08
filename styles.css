@@ -119,24 +119,53 @@ body {
   z-index: 20;
   display: flex;
   align-items: center;
+  gap: 0.45rem;
   padding: 0 0.75rem;
   background: var(--accent);
 }
 
-.month-picker__pill {
+.month-picker__nav {
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
+  width: clamp(40px, 9vw, 44px);
+  height: clamp(40px, 8dvh, 52px);
+  padding: 0;
+  border: 1.5px solid rgba(255,255,255,0.4);
+  border-radius: var(--radius-lg);
+  background: rgba(255,255,255,0.15);
+  color: var(--white);
+  cursor: pointer;
+  transition: background .15s, opacity .15s;
+}
+
+.month-picker__nav:hover:not(:disabled) {
+  background: rgba(255,255,255,0.25);
+}
+
+.month-picker__nav:disabled {
+  opacity: 0.35;
+  cursor: default;
+  color: rgba(255,255,255,0.5);
+}
+
+.month-picker__nav svg {
+  width: 14px;
+  height: 14px;
+}
+
+.month-picker__pill {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: var(--white);
   border: 1.5px solid rgba(255,255,255,0.4);
   border-radius: var(--radius-lg);
   box-shadow: 0 3px 14px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.1);
   height: clamp(40px, 8dvh, 52px);
-}
-
-.month-picker__pill--static {
-  cursor: default;
 }
 
 .month-picker__label {
