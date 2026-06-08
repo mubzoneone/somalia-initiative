@@ -452,7 +452,6 @@ function sectionHeadManageListBtn(mKey, kind, month) {
 function reportIndexStatsHtml(summary) {
   return `
     <span class="report-index-stat"><span class="report-index-stat__label">Raised</span> <span class="report-index-stat__value">${fmt(summary.raised)}</span></span>
-    <span class="report-index-stat"><span class="report-index-stat__label">Sent</span> <span class="report-index-stat__value">${fmt(summary.sent)}</span></span>
     <span class="report-index-stat"><span class="report-index-stat__label">Donors</span> <span class="report-index-stat__value">${summary.donors}</span></span>`;
 }
 
@@ -477,12 +476,12 @@ function refreshMonthSectionTotals(mKey) {
   const visibleDonations = (month.donations || []).filter(d => !isPersonHidden(month, 'donor', d.donorId));
   const visibleDistributions = (month.distributions || []).filter(d => !isPersonHidden(month, 'recipient', d.recipientId));
   const totalRaised = sum(visibleDonations.map(d => d.amount));
-  const totalSent = sum(visibleDistributions.map(d => d.amount));
+  const recipientsTotal = sum(visibleDistributions.map(d => d.amount));
 
   const donTotal = document.querySelector('#md-donations .list-row--total .list-row__amount');
   const distTotal = document.querySelector('#md-distributions .list-row--total .list-row__amount');
   if (donTotal) donTotal.textContent = fmt(totalRaised);
-  if (distTotal) distTotal.textContent = fmt(totalSent);
+  if (distTotal) distTotal.textContent = fmt(recipientsTotal);
   refreshReportsHomeRow(mKey);
 }
 
@@ -519,10 +518,10 @@ function refreshDistributionsSection(mKey) {
   ensureMonthHidden(month);
   const distributions = orderedDistributions(data, month.distributions || []);
   const visibleDistributions = distributions.filter(d => !isPersonHidden(month, 'recipient', d.recipientId));
-  const totalSent = sum(visibleDistributions.map(d => d.amount));
+  const recipientsTotal = sum(visibleDistributions.map(d => d.amount));
   el.innerHTML = visibleDistributions.length
     ? visibleDistributions.map(d => monthAmountRowHtml(mKey, d.id, recipientName(data, d.recipientId), d.amount, 'recipient')).join('')
-      + monthListTotalRowHtml('Total', totalSent)
+      + monthListTotalRowHtml('Total', recipientsTotal)
     : `<div class="empty-row">${recipientsEmptyMessage(data, month)}</div>` + monthListTotalRowHtml('Total', 0);
   refreshSectionHeadManageBtn(mKey, 'recipients', month);
   refreshReportsHomeRow(mKey);
@@ -1004,10 +1003,8 @@ function computeMonthSummary(month, mKey) {
   if (mKey && _monthSummaryCache[mKey]?.rev === rev) return _monthSummaryCache[mKey].value;
   ensureMonthHidden(month);
   const donations = (month.donations || []).filter(d => !isPersonHidden(month, 'donor', d.donorId));
-  const distributions = (month.distributions || []).filter(d => !isPersonHidden(month, 'recipient', d.recipientId));
   const value = {
     raised: sum(donations.map(d => d.amount)),
-    sent: sum(distributions.map(d => d.amount)),
     donors: donations.filter(d => Number(d.amount) > 0).length,
   };
   if (mKey) _monthSummaryCache[mKey] = { rev, value };
@@ -1185,7 +1182,7 @@ function renderMonthDetail(key) {
   const notes         = month.notes         || [];
 
   const totalRaised = sum(visibleDonations.map(d => d.amount));
-  const totalSent   = sum(visibleDistributions.map(d => d.amount));
+  const recipientsTotal = sum(visibleDistributions.map(d => d.amount));
 
   detailEl.innerHTML = `
     <div class="month-detail-layout">
@@ -1226,7 +1223,7 @@ function renderMonthDetail(key) {
               'recipient'
             )).join('')
             : `<div class="empty-row">${recipientsEmptyMessage(data, month)}</div>`}
-          ${monthListTotalRowHtml('Total', totalSent)}
+          ${monthListTotalRowHtml('Total', recipientsTotal)}
         </div>
       </div>
 
