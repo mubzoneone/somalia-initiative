@@ -363,6 +363,19 @@ function invalidateDerivedCache() {
 
 // ── ROW KEBAB MENU ───────────────────────────────────────────────────────────
 const KEBAB_SVG = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="3" r="1.25" fill="currentColor"/><circle cx="7" cy="7" r="1.25" fill="currentColor"/><circle cx="7" cy="11" r="1.25" fill="currentColor"/></svg>';
+const CHEVRON_RIGHT_SVG = '<svg viewBox="0 0 8 14" fill="none" aria-hidden="true"><path d="M1 2L6 7L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+const CHEVRON_LEFT_SVG = '<svg viewBox="0 0 10 16" fill="none" aria-hidden="true"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function playReportsViewEnter(el, variant) {
+  if (!el) return;
+  el.classList.remove('reports-view--enter--home', 'reports-view--enter--detail');
+  void el.offsetWidth;
+  el.classList.add(variant === 'home' ? 'reports-view--enter--home' : 'reports-view--enter--detail');
+  el.addEventListener('animationend', () => {
+    el.classList.remove('reports-view--enter--home', 'reports-view--enter--detail');
+    el.style.willChange = 'auto';
+  }, { once: true });
+}
 function getLatestMonthKey(data) {
   const keys = Object.keys(data.months || {}).sort().reverse();
   return keys[0] || null;
@@ -657,7 +670,7 @@ function peopleListRowHtml(person, type) {
     </div>`;
 }
 
-function archivedPeopleRowHtml(person, type) {
+function archivedPeopleModalRowHtml(person, type) {
   return `
     <div class="list-row list-row--archived">
       <span class="list-row__name">${esc(person.name)}</span>
@@ -665,16 +678,39 @@ function archivedPeopleRowHtml(person, type) {
     </div>`;
 }
 
-function archivedPeopleSectionHtml(people, type) {
-  if (!people.length) return '';
-  return `
-    <details class="people-archived">
-      <summary class="people-archived__summary">
-        <span>Archived (${people.length})</span>
-        <span class="people-archived__chevron" aria-hidden="true"></span>
-      </summary>
-      ${people.map(p => archivedPeopleRowHtml(p, type)).join('')}
-    </details>`;
+function archivedPeopleModalBodyHtml(type) {
+  const data = getData();
+  const list = type === 'donor'
+    ? (data.donors || []).filter(isPersonArchived)
+    : (data.recipients || []).filter(isPersonArchived);
+  const label = type === 'donor' ? 'donors' : 'recipients';
+  if (!list.length) {
+    return `<p class="archived-people-empty">No archived ${label}</p>`;
+  }
+  return `<div class="archived-people-list manage-roster-list">${list.map(p => archivedPeopleModalRowHtml(p, type)).join('')}</div>`;
+}
+
+function updateArchivedPeopleButtons(archivedDonors, archivedRecipients) {
+  const donorBtn = document.getElementById('btn-archived-donors');
+  const recipientBtn = document.getElementById('btn-archived-recipients');
+  if (donorBtn) {
+    donorBtn.setAttribute('aria-label', archivedDonors.length
+      ? `Archived donors (${archivedDonors.length})`
+      : 'Archived donors');
+    donorBtn.classList.toggle('section-head__archive--empty', archivedDonors.length === 0);
+  }
+  if (recipientBtn) {
+    recipientBtn.setAttribute('aria-label', archivedRecipients.length
+      ? `Archived recipients (${archivedRecipients.length})`
+      : 'Archived recipients');
+    recipientBtn.classList.toggle('section-head__archive--empty', archivedRecipients.length === 0);
+  }
+}
+
+function refreshArchivedPeopleModal(type) {
+  if (_archivedModalType !== type || !overlay.classList.contains('overlay--open')) return;
+  modalTitle.textContent = type === 'donor' ? 'Archived Donors' : 'Archived Recipients';
+  modalBody.innerHTML = archivedPeopleModalBodyHtml(type);
 }
 
 // ── RENDER SCHEDULER ─────────────────────────────────────────────────────────
@@ -833,10 +869,11 @@ function renderPeople() {
   const recipients = activeRecipients(data);
   const archivedDonors = (data.donors || []).filter(isPersonArchived);
   const archivedRecipients = (data.recipients || []).filter(isPersonArchived);
-  const fp = JSON.stringify({ donors, recipients, archivedDonors, archivedRecipients });
+  const fp = JSON.stringify({ donors, recipients });
 
   document.getElementById('donors-title').textContent = peopleSectionTitle(donors.length, 'Donor');
   document.getElementById('recipients-title').textContent = peopleSectionTitle(recipients.length, 'Recipient');
+  updateArchivedPeopleButtons(archivedDonors, archivedRecipients);
 
   if (fp === _peopleListFingerprint) return;
   _peopleListFingerprint = fp;
@@ -844,12 +881,12 @@ function renderPeople() {
   document.getElementById('donors-list').innerHTML = donors.length
     ? donors.map(d => peopleListRowHtml(d, 'donor')).join('')
     : '<div class="empty-row">No donors yet</div>';
-  document.getElementById('donors-list').insertAdjacentHTML('beforeend', archivedPeopleSectionHtml(archivedDonors, 'donor'));
 
   document.getElementById('recipients-list').innerHTML = recipients.length
     ? recipients.map(r => peopleListRowHtml(r, 'recipient')).join('')
     : '<div class="empty-row">No recipients yet</div>';
-  document.getElementById('recipients-list').insertAdjacentHTML('beforeend', archivedPeopleSectionHtml(archivedRecipients, 'recipient'));
+
+  if (_archivedModalType) refreshArchivedPeopleModal(_archivedModalType);
 }
 
 document.getElementById('btn-add-donor').addEventListener('click', () => addPersonFromInline('donor'));
@@ -900,6 +937,13 @@ window.restorePerson = function(type, id) {
   person.archived = false;
   saveData(d);
   renderPeople();
+  refreshArchivedPeopleModal(type);
+};
+
+window.openArchivedPeopleModal = function(type) {
+  const sectionLabel = type === 'donor' ? 'Donors' : 'Recipients';
+  _archivedModalType = type;
+  openModal(`Archived ${sectionLabel}`, archivedPeopleModalBodyHtml(type), null, { viewOnly: true });
 };
 
 window.deletePerson = function(type, id) {
@@ -944,12 +988,13 @@ function computeMonthSummary(month, mKey) {
 
 function reportIndexRowHtml(key, summary) {
   return `
-    <div class="list-row list-row--selectable" data-report-key="${esc(key)}" role="button" tabindex="0" onclick="openMonthReport('${esc(key)}')">
+    <div class="list-row list-row--selectable list-row--report" data-report-key="${esc(key)}" role="button" tabindex="0" onclick="openMonthReport('${esc(key)}')">
       <div class="list-row__body report-index-row__body">
         <div class="report-index-row__main">
           <span class="list-row__name report-index-row__title">${esc(monthLabel(key))}</span>
           <div class="report-index-row__stats">${reportIndexStatsHtml(summary)}</div>
         </div>
+        <span class="list-row__chevron" aria-hidden="true">${CHEVRON_RIGHT_SVG}</span>
       </div>
     </div>`;
 }
@@ -974,9 +1019,12 @@ function showReportsHome() {
   activeMonthKey = null;
   const homeEl = document.getElementById('months-home');
   const detailWrap = document.getElementById('months-detail');
-  if (homeEl) homeEl.hidden = false;
   if (detailWrap) detailWrap.hidden = true;
-  renderMonthsHome();
+  if (homeEl) {
+    homeEl.hidden = false;
+    renderMonthsHome();
+    playReportsViewEnter(homeEl, 'home');
+  }
   renderMonthHeadMenu();
 }
 
@@ -989,7 +1037,10 @@ window.openMonthReport = function(key) {
   const detailWrap = document.getElementById('months-detail');
   const titleEl = document.getElementById('month-detail-title');
   if (homeEl) homeEl.hidden = true;
-  if (detailWrap) detailWrap.hidden = false;
+  if (detailWrap) {
+    detailWrap.hidden = false;
+    playReportsViewEnter(detailWrap, 'detail');
+  }
   if (titleEl) titleEl.textContent = monthLabel(key);
   renderMonthHeadMenu();
   renderMonthDetail(key);
@@ -1230,6 +1281,7 @@ window.deleteMonth = function(key) {
 
 // ── MODAL ────────────────────────────────────────────────────────────────────
 let _onConfirm = null;
+let _archivedModalType = null;
 
 const overlay     = document.getElementById('overlay');
 const modalTitle  = document.getElementById('modal-title');
@@ -1240,7 +1292,11 @@ function openModal(title, bodyHTML, onConfirm, opts = {}) {
   _onConfirm = onConfirm;
   modalTitle.textContent  = title;
   modalBody.innerHTML     = bodyHTML;
-  if (opts.onDelete) {
+  if (opts.viewOnly) {
+    modalFooter.className = 'modal__footer';
+    modalFooter.innerHTML = `<button type="button" class="btn btn--primary" id="btn-confirm">Done</button>`;
+    document.getElementById('btn-confirm').addEventListener('click', closeModal);
+  } else if (opts.onDelete) {
     modalFooter.className = 'modal__footer modal__footer--with-delete';
     modalFooter.innerHTML = `
       <button type="button" class="btn btn--danger" id="btn-delete">${esc(opts.deleteLabel || 'Delete')}</button>
@@ -1249,16 +1305,20 @@ function openModal(title, bodyHTML, onConfirm, opts = {}) {
         <button type="button" class="btn btn--primary" id="btn-confirm">Save</button>
       </div>`;
     document.getElementById('btn-delete').addEventListener('click', () => opts.onDelete());
+    const confirmBtn = document.getElementById('btn-confirm');
+    confirmBtn.disabled = false;
+    document.getElementById('btn-cancel').addEventListener('click', closeModal);
+    confirmBtn.addEventListener('click', () => { _onConfirm && _onConfirm(); closeModal(); });
   } else {
     modalFooter.className = 'modal__footer';
     modalFooter.innerHTML = `
       <button type="button" class="btn btn--ghost" id="btn-cancel">Cancel</button>
       <button type="button" class="btn btn--primary" id="btn-confirm">Save</button>`;
+    const confirmBtn = document.getElementById('btn-confirm');
+    confirmBtn.disabled = false;
+    document.getElementById('btn-cancel').addEventListener('click', closeModal);
+    confirmBtn.addEventListener('click', () => { _onConfirm && _onConfirm(); closeModal(); });
   }
-  const confirmBtn = document.getElementById('btn-confirm');
-  confirmBtn.disabled = false;
-  document.getElementById('btn-cancel').addEventListener('click', closeModal);
-  confirmBtn.addEventListener('click', () => { _onConfirm && _onConfirm(); closeModal(); });
   overlay.classList.add('overlay--open');
   document.body.style.overflow = 'hidden';
 }
@@ -1282,6 +1342,7 @@ function closeModal() {
   overlay.classList.remove('overlay--open');
   document.body.style.overflow = '';
   _onConfirm = null;
+  _archivedModalType = null;
 }
 
 window.openMonthRosterManage = function(mKey, kind) {
