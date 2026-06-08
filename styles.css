@@ -42,8 +42,7 @@ body {
 /* ─── APP SHELL ───────────────────────────────────────────────────────────── */
 .app-shell {
   max-width: var(--max-width);
-  height: 100dvh;
-  min-height: 0;
+  min-height: 100dvh;
   margin: 0 auto;
   padding-top: var(--safe-top);
   padding-bottom: var(--safe-bottom);
