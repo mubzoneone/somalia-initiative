@@ -498,55 +498,64 @@
     return _putPromise;
   }
 
+  function hydrateFromDiskCache() {
+    const disk = readLocalCache();
+    if (!disk?.data) return null;
+    const data = normalizeRaw(deepClone(disk.data));
+    if (!data) return null;
+    _cache = data;
+    _ready = true;
+    _cacheSavedAt = disk.savedAt;
+    return data;
+  }
+
+  function loadDataDiskFallback() {
+    const data = hydrateFromDiskCache();
+    if (data) return data;
+    if (_ready && _cache) return _cache;
+    return null;
+  }
+
   async function loadData(options) {
     const opts = options || {};
     const background = !!opts.background;
+    const awaitNetwork = !!opts.awaitNetwork;
+
+    if (awaitNetwork) {
+      _loadError = null;
+      try {
+        return await revalidateFromNetwork({ silent: false, force: true });
+      } catch (err) {
+        const fallback = loadDataDiskFallback();
+        if (fallback) return fallback;
+        throw err;
+      }
+    }
 
     if (background) {
       if (!_ready || !_cache) {
-        return loadData({ background: false });
+        return loadData({ ...opts, background: false });
       }
-      if (!opts.force && isNetworkRevalidationFresh()) return _cache;
-      revalidateFromNetwork({ silent: true, force: !!opts.force }).catch(() => {});
+      revalidateFromNetwork({ silent: true, force: true }).catch(() => {});
       return _cache;
     }
 
     _loadError = null;
 
+    if (!_ready || !_cache) {
+      hydrateFromDiskCache();
+    }
+
     if (_ready && _cache) {
-      if (!opts.force && isNetworkRevalidationFresh()) return _cache;
-      revalidateFromNetwork({ silent: true, force: !!opts.force }).catch(() => {});
+      revalidateFromNetwork({ silent: true, force: true }).catch(() => {});
       return _cache;
     }
 
-    const disk = readLocalCache();
-    if (disk?.data) {
-      const data = normalizeRaw(deepClone(disk.data));
-      if (data) {
-        _cache = data;
-        _ready = true;
-        _cacheSavedAt = disk.savedAt;
-        if (isCacheWithinTTL(disk.savedAt)) {
-          _skipNetworkUntil = disk.savedAt + CACHE_TTL_MS;
-          return _cache;
-        }
-        revalidateFromNetwork({ silent: true, force: !!opts.force }).catch(() => {});
-        return _cache;
-      }
-    }
-
     try {
-      return await revalidateFromNetwork({ silent: false, force: !!opts.force });
+      return await revalidateFromNetwork({ silent: false, force: true });
     } catch (err) {
-      const diskFallback = readLocalCache();
-      if (diskFallback?.data) {
-        const data = normalizeRaw(deepClone(diskFallback.data));
-        if (data) {
-          _cache = data;
-          _ready = true;
-          return _cache;
-        }
-      }
+      const fallback = loadDataDiskFallback();
+      if (fallback) return fallback;
       throw err;
     }
   }

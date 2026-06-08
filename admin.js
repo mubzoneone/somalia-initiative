@@ -1530,10 +1530,17 @@ function runAdminInit() {
     loadData({ background: true, force: true }).catch(() => {});
   });
 
+  window.addEventListener('pageshow', (e) => {
+    if (!e.persisted) return;
+    loadData({ awaitNetwork: true })
+      .then(() => { if (isDataReady()) scheduleActivePanelRender(); })
+      .catch(() => {});
+  });
+
   (async () => {
     if (!isDataReady()) showLoadState('loading');
     try {
-      await loadData();
+      await loadData({ awaitNetwork: true });
     } catch (e) {
       showLoadState('error', e.message);
       return;
