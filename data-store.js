@@ -167,15 +167,63 @@
     return keys.length ? keys[keys.length - 1] : null;
   }
 
+  function newDistributionId() {
+    return 'd' + Math.random().toString(36).slice(2, 11);
+  }
+
+  function activeRecipients(data) {
+    return (data.recipients || []).filter(r => !r?.archived);
+  }
+
+  function ensureMonthHidden(month) {
+    if (!month.hiddenDonors) month.hiddenDonors = [];
+    if (!month.hiddenRecipients) month.hiddenRecipients = [];
+  }
+
+  function isRecipientHidden(month, recipientId) {
+    ensureMonthHidden(month);
+    return month.hiddenRecipients.includes(recipientId);
+  }
+
+  function normalizeMonthRecipients(month, recipients) {
+    const active = (recipients || []).filter(r => !r?.archived);
+    if (!active.length) return;
+
+    ensureMonthHidden(month);
+    if (!month.distributions) month.distributions = [];
+
+    const visible = active.filter(r => !isRecipientHidden(month, r.id));
+    const allHidden = active.every(r => isRecipientHidden(month, r.id));
+
+    if (visible.length === 0 && allHidden) {
+      month.hiddenRecipients = [];
+      active.forEach(r => {
+        if (!month.distributions.some(d => d.recipientId === r.id)) {
+          month.distributions.push({ id: newDistributionId(), recipientId: r.id, amount: 0 });
+        }
+      });
+      return;
+    }
+
+    active.forEach(r => {
+      if (isRecipientHidden(month, r.id)) return;
+      if (!month.distributions.some(d => d.recipientId === r.id)) {
+        month.distributions.push({ id: newDistributionId(), recipientId: r.id, amount: 0 });
+      }
+    });
+  }
+
   function normalizeMonthFields(data) {
     if (!data || typeof data !== 'object') return;
     const months = data.months || {};
     const rootReserves = typeof data.reserves === 'number' ? data.reserves : null;
     const latestKey = getLatestMonthKey(months);
+    const recipients = data.recipients || [];
 
     for (const key of Object.keys(months)) {
       const month = months[key];
       if (month.reserves == null) month.reserves = 0;
+      normalizeMonthRecipients(month, recipients);
     }
 
     if (rootReserves != null && latestKey) {

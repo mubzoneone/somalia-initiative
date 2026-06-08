@@ -189,20 +189,11 @@ function applyMonthRosterFromCheckboxes(month, people, personKind, checkboxClass
   });
 }
 
-function syncMonthRoster(mKey, data) {
-  const month = data.months[mKey];
+function ensureMonthRecipients(month, data) {
   if (!month) return false;
   ensureMonthHidden(month);
-  if (!month.donations) month.donations = [];
   if (!month.distributions) month.distributions = [];
   let changed = false;
-  activeDonors(data).forEach(donor => {
-    if (isPersonHidden(month, 'donor', donor.id)) return;
-    if (!month.donations.some(d => d.donorId === donor.id)) {
-      month.donations.push({ id: genId(), donorId: donor.id, amount: 0 });
-      changed = true;
-    }
-  });
   activeRecipients(data).forEach(recip => {
     if (isPersonHidden(month, 'recipient', recip.id)) return;
     if (!month.distributions.some(d => d.recipientId === recip.id)) {
@@ -211,6 +202,21 @@ function syncMonthRoster(mKey, data) {
     }
   });
   return changed;
+}
+
+function ensureRecipientsAcrossMonths(data) {
+  let changed = false;
+  Object.values(data.months || {}).forEach(month => {
+    if (ensureMonthRecipients(month, data)) changed = true;
+  });
+  return changed;
+}
+
+function recipientsEmptyMessage(data, month) {
+  if (!activeRecipients(data).length) {
+    return 'No recipients yet — add them on the People tab';
+  }
+  return 'No recipients on this report — use Manage list';
 }
 
 function orderedDonations(data, donations) {
@@ -423,17 +429,16 @@ function playReportsViewEnter(el, variant) {
     el.classList.remove('reports-view--enter--home', 'reports-view--enter--detail');
   }, { once: true });
 }
-function getLatestMonthKey(data) {
-  const keys = Object.keys(data.months || {}).sort().reverse();
-  return keys[0] || null;
-}
-
-function copyMonthRoster(targetMonth, sourceMonth, data) {
+function initNewMonthRoster(targetMonth, data) {
   ensureMonthHidden(targetMonth);
   targetMonth.donations = [];
-  targetMonth.distributions = [];
   targetMonth.hiddenDonors = activeDonors(data).map(d => d.id);
-  targetMonth.hiddenRecipients = activeRecipients(data).map(r => r.id);
+  targetMonth.hiddenRecipients = [];
+  targetMonth.distributions = activeRecipients(data).map(r => ({
+    id: genId(),
+    recipientId: r.id,
+    amount: 0,
+  }));
 }
 
 function sectionHeadManageListBtn(mKey, kind, month) {
@@ -518,7 +523,7 @@ function refreshDistributionsSection(mKey) {
   el.innerHTML = visibleDistributions.length
     ? visibleDistributions.map(d => monthAmountRowHtml(mKey, d.id, recipientName(data, d.recipientId), d.amount, 'recipient')).join('')
       + monthListTotalRowHtml('Total', totalSent)
-    : '<div class="empty-row">No recipients on this report — use Manage list</div>' + monthListTotalRowHtml('Total', 0);
+    : `<div class="empty-row">${recipientsEmptyMessage(data, month)}</div>` + monthListTotalRowHtml('Total', 0);
   refreshSectionHeadManageBtn(mKey, 'recipients', month);
   refreshReportsHomeRow(mKey);
 }
@@ -860,6 +865,7 @@ function openAddPersonModal(type) {
       const d = getData();
       const list = type === 'donor' ? d.donors : d.recipients;
       list.push({ id: genId(), name });
+      if (type === 'recipient') ensureRecipientsAcrossMonths(d);
       saveData(d);
       renderPeople();
     }
@@ -945,6 +951,7 @@ window.restorePerson = function(type, id) {
   if (!person) return;
   person.archived = false;
   delete person.archivedAt;
+  if (type === 'recipient') ensureRecipientsAcrossMonths(d);
   saveData(d);
   renderPeople();
 };
@@ -1117,8 +1124,7 @@ document.getElementById('month-detail').addEventListener('keydown', e => {
 document.getElementById('btn-new-month').addEventListener('click', () => {
   const data = getData();
   const suggested = suggestedNewMonthParts(data);
-  const latestKey = getLatestMonthKey(data);
-  const copyHint = `<p class="manage-roster-note" style="margin:0 0 0.5rem;">No donors or recipients are selected yet. After creating, use <strong>Manage list</strong> on each section to choose who appears on this report.</p>`;
+  const copyHint = `<p class="manage-roster-note" style="margin:0 0 0.5rem;">Recipients are included automatically. Reserves start at £0. Use <strong>Manage list</strong> under Donors to choose who donated. Use <strong>Manage list</strong> under Recipients only to remove someone from this month.</p>`;
   openModal('New Report', `
     ${copyHint}
     <div class="field">
@@ -1138,14 +1144,13 @@ document.getElementById('btn-new-month').addEventListener('click', () => {
       const key = monthKeyFromParts(y, m);
       const d = getData();
       if (d.months[key]) return alert('That report already exists.');
-      const sourceMonth = latestKey ? d.months[latestKey] : null;
       const month = {
         donations: [],
         distributions: [],
         notes: [],
-        reserves: sourceMonth ? getMonthReserves(sourceMonth) : 0,
+        reserves: 0,
       };
-      copyMonthRoster(month, sourceMonth, d);
+      initNewMonthRoster(month, d);
       d.months[key] = month;
       saveData(d);
       openMonthReport(key);
@@ -1171,6 +1176,7 @@ function renderMonthDetail(key) {
 
   ensureMonthHidden(month);
   ensureMonthReserves(month);
+  if (ensureMonthRecipients(month, data)) saveData(data);
 
   const donations     = orderedDonations(data, month.donations || []);
   const distributions = orderedDistributions(data, month.distributions || []);
@@ -1219,7 +1225,7 @@ function renderMonthDetail(key) {
               d.amount,
               'recipient'
             )).join('')
-            : '<div class="empty-row">No recipients on this report — use Manage list</div>'}
+            : `<div class="empty-row">${recipientsEmptyMessage(data, month)}</div>`}
           ${monthListTotalRowHtml('Total', totalSent)}
         </div>
       </div>
@@ -1425,13 +1431,16 @@ window.openMonthRosterManage = function(mKey, kind) {
   const personKind = isRecipients ? 'recipient' : 'donor';
   const sectionLabel = isRecipients ? 'Recipients' : 'Donors';
   const title = `${sectionLabel} on ${monthLabel(mKey)}`;
+  const rosterNote = isRecipients
+    ? 'Uncheck names to remove them from this report.'
+    : 'Selected names appear on this report.';
   const listHtml = rosterPillsHtml(people, {
     isChecked: p => !isPersonHidden(month, personKind, p.id),
     emptyMessage: `No ${isRecipients ? 'recipients' : 'donors'} on the People tab yet.`,
   });
 
   openModal(title, `
-    <p class="manage-roster-note">Selected names appear on this report.</p>
+    <p class="manage-roster-note">${rosterNote}</p>
     <div class="manage-roster-list">${listHtml}</div>`,
     () => {
       const d = getData();
