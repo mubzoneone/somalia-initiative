@@ -116,9 +116,8 @@
     }
 
     function computeTotalRaised(data) {
-      const fromReports = Object.values(data.months || {})
+      return Object.values(data.months || {})
         .reduce((s, m) => s + sumVisibleDonations(m), 0);
-      return Number(data.legacyFunds ?? 0) + fromReports;
     }
 
     function computeMonthRaised(month) {
@@ -164,24 +163,20 @@
       const data = getData();
       const monthData = (data.months || {})[key];
 
-      // Update header reserves
-      reservesEl.textContent = fmt(data.reserves ?? 0);
-
       if (!monthData) {
+        reservesEl.textContent = '—';
         reportEl.innerHTML = `<p class="empty-state">No report for ${monthLabel(key)}.</p>`;
         return;
       }
+
+      reservesEl.textContent = fmt(monthData.reserves ?? 0);
 
       const visibleDistributions = (monthData.distributions || [])
         .filter(d => !isRecipientHidden(monthData, d.recipientId));
       const notes = monthData.notes || [];
 
-      // "This month" = donor donations raised this month
       const thisMonth = computeMonthRaised(monthData);
-
       const paidDonorCount = countPaidDonors(monthData);
-
-      // "Total raised" = legacy baseline + all visible donor contributions
       const totalRaised = computeTotalRaised(data);
 
       // Build family rows from visible distributions

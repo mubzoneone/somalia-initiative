@@ -2,7 +2,7 @@
 (function () {
   'use strict';
 
-  const SCHEMA_VERSION = 2;
+  const SCHEMA_VERSION = 3;
   const LEGACY_DEFAULT_NOTE = '4 families received £40 each';
   const LEGACY_STORAGE_KEY = 'si_data';
   const CACHE_KEY = 'si_remote_cache';
@@ -12,8 +12,6 @@
 
   const SEED = {
     version: SCHEMA_VERSION,
-    reserves: 1,
-    legacyFunds: 0,
     donors: [
       { id: 'd1', name: 'Amina Hassan' },
       { id: 'd2', name: 'Omar Farah' },
@@ -39,6 +37,7 @@
           { id: 'b4', recipientId: 'r4', amount: 40 },
         ],
         notes: [],
+        reserves: 1,
       },
       '2025-03': {
         donations: [
@@ -51,6 +50,7 @@
           { id: 'e3', recipientId: 'r3', amount: 40 },
         ],
         notes: ['3 families supported this month'],
+        reserves: 0,
       },
       '2025-02': {
         donations: [
@@ -62,6 +62,7 @@
           { id: 'g2', recipientId: 'r2', amount: 35 },
         ],
         notes: ['Reduced contributions due to fewer donations received'],
+        reserves: 0,
       },
       '2025-01': {
         donations: [
@@ -75,6 +76,7 @@
           { id: 'i3', recipientId: 'r3', amount: 50 },
         ],
         notes: ['Strong start to the year — 3 families supported', 'Extra funds rolled into reserves'],
+        reserves: 0,
       },
     },
   };
@@ -160,22 +162,47 @@
     return changed;
   }
 
+  function getLatestMonthKey(months) {
+    const keys = Object.keys(months || {}).sort();
+    return keys.length ? keys[keys.length - 1] : null;
+  }
+
+  function normalizeMonthFields(data) {
+    if (!data || typeof data !== 'object') return;
+    const months = data.months || {};
+    const rootReserves = typeof data.reserves === 'number' ? data.reserves : null;
+    const latestKey = getLatestMonthKey(months);
+
+    for (const key of Object.keys(months)) {
+      const month = months[key];
+      if (month.reserves == null) month.reserves = 0;
+    }
+
+    if (rootReserves != null && latestKey) {
+      const latest = months[latestKey];
+      if (latest && latest.reserves === 0) latest.reserves = rootReserves;
+    }
+
+    delete data.reserves;
+    delete data.legacyFunds;
+  }
+
   function normalizeRaw(raw) {
     if (!raw || typeof raw !== 'object') return null;
-    if (raw.version === SCHEMA_VERSION || raw.version === 3) {
+    if (raw.version === SCHEMA_VERSION || raw.version === 2 || raw.version === 3) {
       raw.version = SCHEMA_VERSION;
       if (!raw.donors) raw.donors = [];
       if (!raw.recipients) raw.recipients = [];
-      if (raw.legacyFunds == null) raw.legacyFunds = 0;
+      normalizeMonthFields(raw);
       return raw;
     }
     if (raw.months) {
       const migrated = cloneSeed();
       migrated.months = raw.months;
-      migrated.reserves = raw.reserves ?? SEED.reserves;
-      migrated.legacyFunds = raw.legacyFunds ?? 0;
       if (raw.donors?.length) migrated.donors = raw.donors;
       if (raw.recipients?.length) migrated.recipients = raw.recipients;
+      if (typeof raw.reserves === 'number') migrated.reserves = raw.reserves;
+      normalizeMonthFields(migrated);
       return migrated;
     }
     return null;

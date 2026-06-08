@@ -37,6 +37,14 @@ function ensureMonthHidden(month) {
   if (!month.hiddenRecipients) month.hiddenRecipients = [];
 }
 
+function ensureMonthReserves(month) {
+  if (month.reserves == null) month.reserves = 0;
+}
+
+function getMonthReserves(month) {
+  return Number(month?.reserves ?? 0);
+}
+
 function isPersonHidden(month, kind, personId) {
   ensureMonthHidden(month);
   const list = kind === 'donor' ? month.hiddenDonors : month.hiddenRecipients;
@@ -340,9 +348,8 @@ function sumVisibleDonations(month) {
 }
 
 function computeTotalRaised(data) {
-  const fromReports = Object.values(data.months || {})
+  return Object.values(data.months || {})
     .reduce((s, m) => s + sumVisibleDonations(m), 0);
-  return Number(data.legacyFunds ?? 0) + fromReports;
 }
 
 let _statsCache = null;
@@ -826,9 +833,6 @@ function renderOverview() {
   const data = getData();
   const { totalRaised, monthCount } = computeStats(data);
 
-  document.getElementById('reserves-display').textContent = fmt(data.reserves ?? 0);
-  document.getElementById('legacy-funds-display').textContent = fmt(data.legacyFunds ?? 0);
-
   document.getElementById('overview-stats').innerHTML = `
     <div class="stat-card stat-card--accent">
       <p class="stat-card__label">Total Raised</p>
@@ -839,45 +843,6 @@ function renderOverview() {
       <p class="stat-card__value">${monthCount}</p>
     </div>`;
 }
-
-document.getElementById('btn-edit-reserves').addEventListener('click', () => {
-  const data = getData();
-  openModal('Edit Reserves', `
-    <div class="field">
-      <label class="field__label" for="inp-reserves">Reserves Amount</label>
-      <div class="field__prefix-wrap">
-        <span class="field__prefix">£</span>
-        <input class="field__input field__input--prefixed" id="inp-reserves" type="number" inputmode="decimal" min="0" step="0.01" value="${data.reserves ?? 0}">
-      </div>
-    </div>`,
-    () => {
-      const val = parseFloat(document.getElementById('inp-reserves').value);
-      if (isNaN(val) || val < 0) return alert('Please enter a valid amount.');
-      const d = getData(); d.reserves = val; saveData(d);
-      renderOverview();
-    }
-  );
-});
-
-document.getElementById('btn-edit-legacy-funds').addEventListener('click', () => {
-  const data = getData();
-  openModal('Edit Legacy Funds', `
-    <p class="manage-roster-note" style="margin:0 0 0.75rem;">Pre-tracker total included in Total raised.</p>
-    <div class="field" style="margin-bottom:0;">
-      <label class="field__label" for="inp-legacy-funds">Legacy funds</label>
-      <div class="field__prefix-wrap">
-        <span class="field__prefix">£</span>
-        <input class="field__input field__input--prefixed" id="inp-legacy-funds" type="number" inputmode="decimal" min="0" step="0.01" value="${data.legacyFunds ?? 0}">
-      </div>
-    </div>`,
-    () => {
-      const val = parseFloat(document.getElementById('inp-legacy-funds').value);
-      if (isNaN(val) || val < 0) return alert('Please enter a valid amount.');
-      const d = getData(); d.legacyFunds = val; saveData(d);
-      renderOverview();
-    }
-  );
-});
 
 // ── PEOPLE ───────────────────────────────────────────────────────────────────
 function peopleSectionTitle(count, singular) {
@@ -1176,8 +1141,13 @@ document.getElementById('btn-new-month').addEventListener('click', () => {
       const key = monthKeyFromParts(y, m);
       const d = getData();
       if (d.months[key]) return alert('That report already exists.');
-      const month = { donations: [], distributions: [], notes: [] };
       const sourceMonth = latestKey ? d.months[latestKey] : null;
+      const month = {
+        donations: [],
+        distributions: [],
+        notes: [],
+        reserves: sourceMonth ? getMonthReserves(sourceMonth) : 0,
+      };
       copyMonthRoster(month, sourceMonth, d);
       d.months[key] = month;
       saveData(d);
@@ -1203,6 +1173,7 @@ function renderMonthDetail(key) {
   if (!month) { detailEl.innerHTML = ''; return; }
 
   ensureMonthHidden(month);
+  ensureMonthReserves(month);
 
   const donations     = orderedDonations(data, month.donations || []);
   const distributions = orderedDistributions(data, month.distributions || []);
@@ -1215,6 +1186,14 @@ function renderMonthDetail(key) {
 
   detailEl.innerHTML = `
     <div class="month-detail-layout">
+
+      <div class="reserves-card">
+        <div class="reserves-card__body">
+          <p class="reserves-card__label">Reserves</p>
+          <p class="reserves-card__value">${fmt(getMonthReserves(month))}</p>
+        </div>
+        <button type="button" class="btn btn--outline btn--sm" onclick="editMonthReserves('${key}')">Edit</button>
+      </div>
 
       <!-- DONORS -->
       <div class="card">
@@ -1278,6 +1257,33 @@ function renderMonthDetail(key) {
 }
 
 // ── MONTH CRUD ───────────────────────────────────────────────────────────────
+window.editMonthReserves = function(mKey) {
+  const data = getData();
+  const month = data.months[mKey];
+  if (!month) return;
+  ensureMonthReserves(month);
+  openModal('Edit Reserves', `
+    <div class="field" style="margin-bottom:0;">
+      <label class="field__label" for="inp-reserves">Reserves for ${esc(monthLabel(mKey))}</label>
+      <div class="field__prefix-wrap">
+        <span class="field__prefix">£</span>
+        <input class="field__input field__input--prefixed" id="inp-reserves" type="number" inputmode="decimal" min="0" step="0.01" value="${getMonthReserves(month)}">
+      </div>
+    </div>`,
+    () => {
+      const val = parseFloat(document.getElementById('inp-reserves').value);
+      if (isNaN(val) || val < 0) return alert('Please enter a valid amount.');
+      const d = getData();
+      const m = d.months[mKey];
+      if (!m) return;
+      ensureMonthReserves(m);
+      m.reserves = val;
+      saveData(d);
+      renderMonthDetail(mKey);
+    }
+  );
+};
+
 window.addNote = function(mKey) {
   openModal('Add Note', `
     <div class="field">

@@ -502,6 +502,15 @@ body {
   color: var(--people-donor-text);
 }
 
+.section-head--donors .section-head__add,
+.section-head--recipients .section-head__add {
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.35rem 0.55rem;
+  border: 1.5px solid #ffffff;
+  box-shadow: 0 0 0 1.5px #0d1117;
+}
+
 .section-head--donors .section-head__add {
   color: var(--people-donor-text);
 }
@@ -521,22 +530,11 @@ body {
 
 .section-head--recipients .section-head__add {
   color: var(--people-recipient-text);
-  border: none;
-  font-size: 0.85rem;
-  font-weight: 700;
-  padding: 0.35rem 0.55rem;
 }
 
 .section-head--recipients .section-head__add:hover {
   background: rgba(13, 17, 23, 0.08);
   color: var(--people-recipient-text);
-}
-
-.section-head--donors .section-head__add {
-  border: none;
-  font-size: 0.85rem;
-  font-weight: 700;
-  padding: 0.35rem 0.55rem;
 }
 
 .section-head__meta {
@@ -1049,14 +1047,7 @@ input[type="number"],
 .stat-card--accent .stat-card__label { color: rgba(255,255,255,0.75); }
 .stat-card--accent .stat-card__value { color: var(--on-accent); }
 
-/* ── OVERVIEW CARDS ──────────────────────────────────────────────────────── */
-.overview-cards {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.6rem;
-  margin-bottom: 0.6rem;
-}
-
+/* ── RESERVES CARD ───────────────────────────────────────────────────────── */
 .reserves-card {
   background: var(--surface);
   border: 1.5px solid var(--border);
