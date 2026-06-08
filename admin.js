@@ -347,7 +347,6 @@ function computeStats(data) {
   const months = Object.values(data.months || {});
   const result = {
     totalRaised: computeTotalRaised(data),
-    totalSent: sum(months.flatMap(m => (m.distributions || []).map(d => d.amount))),
     monthCount: months.length,
   };
   _statsCache = result;
@@ -818,7 +817,7 @@ function switchTab(name) {
 // ── OVERVIEW ─────────────────────────────────────────────────────────────────
 function renderOverview() {
   const data = getData();
-  const { totalRaised, totalSent, monthCount } = computeStats(data);
+  const { totalRaised, monthCount } = computeStats(data);
 
   document.getElementById('reserves-display').textContent = fmt(data.reserves ?? 0);
   document.getElementById('legacy-funds-display').textContent = fmt(data.legacyFunds ?? 0);
@@ -827,14 +826,6 @@ function renderOverview() {
     <div class="stat-card stat-card--accent">
       <p class="stat-card__label">Total Raised</p>
       <p class="stat-card__value">${fmt(totalRaised)}</p>
-    </div>
-    <div class="stat-card">
-      <p class="stat-card__label">Total Sent</p>
-      <p class="stat-card__value">${fmt(totalSent)}</p>
-    </div>
-    <div class="stat-card">
-      <p class="stat-card__label">Donors</p>
-      <p class="stat-card__value">${activeDonors(data).length}</p>
     </div>
     <div class="stat-card">
       <p class="stat-card__label">Active reports</p>
@@ -888,19 +879,26 @@ function peopleSectionTitle(count, singular) {
 
 let _peopleListFingerprint = '';
 
-function addPersonFromInline(type) {
-  const inputId = type === 'donor' ? 'donor-add-input' : 'recipient-add-input';
-  const input = document.getElementById(inputId);
-  if (!input) return;
-  const name = input.value.trim();
-  if (!name) return alert('Please enter a name.');
-  const d = getData();
-  const list = type === 'donor' ? d.donors : d.recipients;
-  list.push({ id: genId(), name });
-  saveData(d);
-  input.value = '';
-  renderPeople();
-  input.focus();
+function openAddPersonModal(type) {
+  const label = type === 'donor' ? 'Donor' : 'Recipient';
+  openModal(`Add ${label}`, `
+    <div class="field">
+      <label class="field__label" for="inp-pname-new">Full Name</label>
+      <input class="field__input" id="inp-pname-new" type="text" autocomplete="off">
+    </div>`,
+    () => {
+      const name = document.getElementById('inp-pname-new').value.trim();
+      if (!name) return alert('Please enter a name.');
+      const d = getData();
+      const list = type === 'donor' ? d.donors : d.recipients;
+      list.push({ id: genId(), name });
+      saveData(d);
+      renderPeople();
+    }
+  );
+  const confirmBtn = document.getElementById('btn-confirm');
+  if (confirmBtn) confirmBtn.textContent = 'Add';
+  setTimeout(() => { const i = document.getElementById('inp-pname-new'); if (i) i.focus(); }, 80);
 }
 
 function renderPeople() {
@@ -930,14 +928,8 @@ function renderPeople() {
   if (_archivedModalType) refreshArchivedPeopleModal(_archivedModalType);
 }
 
-document.getElementById('btn-add-donor').addEventListener('click', () => addPersonFromInline('donor'));
-document.getElementById('btn-add-recipient').addEventListener('click', () => addPersonFromInline('recipient'));
-document.getElementById('donor-add-input')?.addEventListener('keydown', e => {
-  if (e.key === 'Enter') { e.preventDefault(); addPersonFromInline('donor'); }
-});
-document.getElementById('recipient-add-input')?.addEventListener('keydown', e => {
-  if (e.key === 'Enter') { e.preventDefault(); addPersonFromInline('recipient'); }
-});
+document.getElementById('btn-add-donor').addEventListener('click', () => openAddPersonModal('donor'));
+document.getElementById('btn-add-recipient').addEventListener('click', () => openAddPersonModal('recipient'));
 
 window.editPerson = function(type, id) {
   const data  = getData();

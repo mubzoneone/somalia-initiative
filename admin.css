@@ -42,6 +42,10 @@
   --dur-nav-pop:       430ms;
   --dur-row-stagger:   50ms;
   --dur-row-in:        450ms;
+  --people-donor-bg:      var(--accent);
+  --people-donor-text:    var(--on-accent);
+  --people-recipient-bg:  #f5c518;
+  --people-recipient-text:#1a1400;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -66,6 +70,8 @@
     --shadow-sm:    none;
     --shadow-md:    none;
     --shadow-lg:    none;
+    --people-recipient-bg:  #e6b800;
+    --people-recipient-text:#ffffff;
   }
 
   .header {
@@ -81,6 +87,27 @@
 
   .field__select {
     background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 7L11 1' stroke='%238E8E93' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+
+  .section-head--recipients .section-head__archive,
+  .section-head--recipients .section-head__add {
+    border-color: rgba(255, 255, 255, 0.35);
+  }
+
+  .section-head--recipients .section-head__archive:hover,
+  .section-head--recipients .section-head__add:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.5);
+  }
+
+  .section-head--recipients .section-head__archive--empty {
+    color: rgba(255, 255, 255, 0.75);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+
+  .section-head--recipients .section-head__archive--empty:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.15);
   }
 }
 
@@ -123,22 +150,12 @@ body {
   display: none;
 }
 
-.sidebar__brand {
-  margin: 0;
-  padding: 1.25rem 1rem 0.75rem;
-  font-size: 0.85rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.25;
-  color: var(--text);
-}
-
 .sidebar__nav {
   display: flex;
   flex-direction: column;
   flex: 1;
   gap: 0.15rem;
-  padding: 0 0.5rem;
+  padding: 0.75rem 0.5rem 0;
 }
 
 .sidebar__item {
@@ -260,21 +277,11 @@ body {
 
 .drawer.is-open { transform: translateX(0); }
 
-.drawer__brand {
-  margin: 0;
-  padding: 1.15rem 1rem 0.75rem;
-  font-size: 0.85rem;
-  font-weight: 800;
-  letter-spacing: -0.02em;
-  line-height: 1.25;
-  color: var(--text);
-}
-
 .drawer__nav {
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
-  padding: 0 0.5rem;
+  padding: 0.75rem 0.5rem 0;
 }
 
 .drawer__spacer { flex: 1; min-height: 0.75rem; }
@@ -502,6 +509,111 @@ body {
   color: var(--text);
   border-color: var(--border-strong);
   background: var(--surface-hover);
+}
+
+.section-head__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.section-head__actions .section-head__archive {
+  margin-left: 0;
+}
+
+.section-head--people {
+  min-height: 52px;
+  padding: 0.85rem 1rem;
+  border-bottom: none;
+}
+
+.section-head--people .section-head__title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  text-transform: none;
+  letter-spacing: -0.02em;
+}
+
+.section-head--donors {
+  background: var(--people-donor-bg);
+}
+
+.section-head--donors .section-head__title {
+  color: var(--people-donor-text);
+}
+
+.section-head--donors .section-head__archive,
+.section-head--donors .section-head__add {
+  color: var(--people-donor-text);
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.section-head--donors .section-head__archive {
+  background: transparent;
+}
+
+.section-head--donors .section-head__archive:hover,
+.section-head--donors .section-head__add:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: var(--people-donor-text);
+}
+
+.section-head--donors .section-head__archive--empty {
+  color: rgba(255, 255, 255, 0.75);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.section-head--donors .section-head__archive--empty:hover {
+  color: var(--people-donor-text);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.section-head--recipients {
+  background: var(--people-recipient-bg);
+}
+
+.section-head--recipients .section-head__title {
+  color: var(--people-recipient-text);
+}
+
+.section-head--recipients .section-head__archive,
+.section-head--recipients .section-head__add {
+  color: var(--people-recipient-text);
+  border-color: rgba(26, 20, 0, 0.2);
+  background: transparent;
+}
+
+.section-head--recipients .section-head__add {
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.35rem 0.55rem;
+}
+
+.section-head--recipients .section-head__archive:hover,
+.section-head--recipients .section-head__add:hover {
+  background: rgba(26, 20, 0, 0.08);
+  border-color: rgba(26, 20, 0, 0.3);
+  color: var(--people-recipient-text);
+}
+
+.section-head--recipients .section-head__archive--empty {
+  color: rgba(26, 20, 0, 0.55);
+  border-color: rgba(26, 20, 0, 0.18);
+}
+
+.section-head--recipients .section-head__archive--empty:hover {
+  color: var(--people-recipient-text);
+  background: rgba(26, 20, 0, 0.08);
+}
+
+.section-head--donors .section-head__add {
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.35rem 0.55rem;
 }
 
 .section-head__meta {
@@ -1504,7 +1616,7 @@ input[type="number"],
   }
 
   .stats-grid {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .list-row--nav .list-row__body {
