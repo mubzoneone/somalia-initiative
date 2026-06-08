@@ -362,7 +362,6 @@ function invalidateDerivedCache() {
 
 // ── ROW KEBAB MENU ───────────────────────────────────────────────────────────
 const KEBAB_SVG = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><circle cx="7" cy="3" r="1.25" fill="currentColor"/><circle cx="7" cy="7" r="1.25" fill="currentColor"/><circle cx="7" cy="11" r="1.25" fill="currentColor"/></svg>';
-const ARCHIVE_SVG = '<svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 5.5h8v6.5a1 1 0 01-1 1H4a1 1 0 01-1-1V5.5z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M5.5 5.5V4.2a1.3 1.3 0 013 0V5.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 8h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
 const CHEVRON_RIGHT_SVG = '<svg viewBox="0 0 8 14" fill="none" aria-hidden="true"><path d="M1 2L6 7L1 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const CHEVRON_LEFT_SVG = '<svg viewBox="0 0 10 16" fill="none" aria-hidden="true"><path d="M8 2L2 8L8 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 const NAV_PUSH_MS = 500;
@@ -703,7 +702,7 @@ function peopleListRowHtml(person, type) {
     </div>`;
 }
 
-function archivedPeopleModalRowHtml(person, type) {
+function archivedPeopleRowHtml(person, type) {
   return `
     <div class="list-row list-row--archived">
       <span class="list-row__name">${esc(person.name)}</span>
@@ -711,45 +710,75 @@ function archivedPeopleModalRowHtml(person, type) {
     </div>`;
 }
 
-function archivedPeopleModalBodyHtml(type) {
+const peopleCardView = { donor: 'active', recipient: 'active' };
+
+function peopleCardEls(type) {
+  const prefix = type === 'donor' ? 'donors' : 'recipients';
+  return {
+    activeView: document.getElementById(`${prefix}-active-view`),
+    archivedView: document.getElementById(`${prefix}-archived-view`),
+    activeList: document.getElementById(`${prefix}-list`),
+    archivedList: document.getElementById(`${prefix}-archived-list`),
+  };
+}
+
+function peopleArchivedRowHtml(type, count) {
+  const label = count > 0 ? `Archived (${count})` : 'Archived';
+  return `
+    <div class="list-row list-row--selectable list-row--nav list-row--people-archived" role="button" tabindex="0" onclick="openPeopleArchived('${type}')">
+      <div class="list-row__body">
+        <span class="list-row__name">${label}</span>
+        <span class="list-row__chevron" aria-hidden="true">${CHEVRON_RIGHT_SVG}</span>
+      </div>
+    </div>`;
+}
+
+function renderPeopleArchivedList(type) {
+  const { archivedList } = peopleCardEls(type);
+  if (!archivedList) return;
   const data = getData();
   const list = type === 'donor'
     ? (data.donors || []).filter(isPersonArchived)
     : (data.recipients || []).filter(isPersonArchived);
   const label = type === 'donor' ? 'donors' : 'recipients';
   if (!list.length) {
-    return `<p class="archived-people-empty">No archived ${label}</p>`;
+    archivedList.innerHTML = `<p class="archived-people-empty">No archived ${label}</p>`;
+    return;
   }
-  return `<div class="archived-people-list manage-roster-list">${list.map(p => archivedPeopleModalRowHtml(p, type)).join('')}</div>`;
+  archivedList.innerHTML = list.map(p => archivedPeopleRowHtml(p, type)).join('');
 }
 
-function injectArchiveButtonIcons() {
-  [document.getElementById('btn-archived-donors'), document.getElementById('btn-archived-recipients')].forEach(btn => {
-    if (btn) btn.innerHTML = ARCHIVE_SVG;
+window.openPeopleArchived = function(type) {
+  peopleCardView[type] = 'archived';
+  const { activeView, archivedView } = peopleCardEls(type);
+  if (activeView) activeView.hidden = true;
+  if (archivedView) {
+    archivedView.hidden = false;
+    renderPeopleArchivedList(type);
+    playReportsViewEnter(archivedView, 'detail');
+  }
+};
+
+window.showPeopleActive = function(type) {
+  peopleCardView[type] = 'active';
+  const { activeView, archivedView } = peopleCardEls(type);
+  if (archivedView) archivedView.hidden = true;
+  if (activeView) {
+    activeView.hidden = false;
+    playReportsViewEnter(activeView, 'home');
+  }
+};
+
+function showPeopleHome(animate = false) {
+  ['donor', 'recipient'].forEach(type => {
+    peopleCardView[type] = 'active';
+    const { activeView, archivedView } = peopleCardEls(type);
+    if (archivedView) archivedView.hidden = true;
+    if (activeView) {
+      activeView.hidden = false;
+      if (animate) playReportsViewEnter(activeView, 'home');
+    }
   });
-}
-
-function updateArchivedPeopleButtons(archivedDonors, archivedRecipients) {
-  const donorBtn = document.getElementById('btn-archived-donors');
-  const recipientBtn = document.getElementById('btn-archived-recipients');
-  if (donorBtn) {
-    donorBtn.setAttribute('aria-label', archivedDonors.length
-      ? `Archived donors (${archivedDonors.length})`
-      : 'Archived donors');
-    donorBtn.classList.toggle('section-head__archive--empty', archivedDonors.length === 0);
-  }
-  if (recipientBtn) {
-    recipientBtn.setAttribute('aria-label', archivedRecipients.length
-      ? `Archived recipients (${archivedRecipients.length})`
-      : 'Archived recipients');
-    recipientBtn.classList.toggle('section-head__archive--empty', archivedRecipients.length === 0);
-  }
-}
-
-function refreshArchivedPeopleModal(type) {
-  if (_archivedModalType !== type || !overlay.classList.contains('overlay--open')) return;
-  modalTitle.textContent = type === 'donor' ? 'Archived Donors' : 'Archived Recipients';
-  modalBody.innerHTML = archivedPeopleModalBodyHtml(type);
 }
 
 // ── RENDER SCHEDULER ─────────────────────────────────────────────────────────
@@ -804,7 +833,10 @@ function switchTab(name) {
     btn.classList.toggle('sidebar__item--active', btn.dataset.panel === name);
   });
   if (name === 'overview') renderOverview();
-  if (name === 'people')   renderPeople();
+  if (name === 'people') {
+    showPeopleHome();
+    renderPeople();
+  }
   if (name === 'months') {
     monthsView = 'home';
     activeMonthKey = null;
@@ -907,25 +939,35 @@ function renderPeople() {
   const recipients = activeRecipients(data);
   const archivedDonors = (data.donors || []).filter(isPersonArchived);
   const archivedRecipients = (data.recipients || []).filter(isPersonArchived);
-  const fp = JSON.stringify({ donors, recipients });
+  const fp = JSON.stringify({
+    donors,
+    recipients,
+    archivedDonors: archivedDonors.length,
+    archivedRecipients: archivedRecipients.length,
+  });
 
   document.getElementById('donors-title').textContent = peopleSectionTitle(donors.length, 'Donor');
   document.getElementById('recipients-title').textContent = peopleSectionTitle(recipients.length, 'Recipient');
-  injectArchiveButtonIcons();
-  updateArchivedPeopleButtons(archivedDonors, archivedRecipients);
 
-  if (fp === _peopleListFingerprint) return;
+  if (fp === _peopleListFingerprint) {
+    if (peopleCardView.donor === 'archived') renderPeopleArchivedList('donor');
+    if (peopleCardView.recipient === 'archived') renderPeopleArchivedList('recipient');
+    return;
+  }
   _peopleListFingerprint = fp;
 
-  document.getElementById('donors-list').innerHTML = donors.length
+  const donorsHtml = donors.length
     ? donors.map(d => peopleListRowHtml(d, 'donor')).join('')
     : '<div class="empty-row">No donors yet</div>';
+  document.getElementById('donors-list').innerHTML = donorsHtml + peopleArchivedRowHtml('donor', archivedDonors.length);
 
-  document.getElementById('recipients-list').innerHTML = recipients.length
+  const recipientsHtml = recipients.length
     ? recipients.map(r => peopleListRowHtml(r, 'recipient')).join('')
     : '<div class="empty-row">No recipients yet</div>';
+  document.getElementById('recipients-list').innerHTML = recipientsHtml + peopleArchivedRowHtml('recipient', archivedRecipients.length);
 
-  if (_archivedModalType) refreshArchivedPeopleModal(_archivedModalType);
+  if (peopleCardView.donor === 'archived') renderPeopleArchivedList('donor');
+  if (peopleCardView.recipient === 'archived') renderPeopleArchivedList('recipient');
 }
 
 document.getElementById('btn-add-donor').addEventListener('click', () => openAddPersonModal('donor'));
@@ -970,13 +1012,6 @@ window.restorePerson = function(type, id) {
   person.archived = false;
   saveData(d);
   renderPeople();
-  refreshArchivedPeopleModal(type);
-};
-
-window.openArchivedPeopleModal = function(type) {
-  const sectionLabel = type === 'donor' ? 'Donors' : 'Recipients';
-  _archivedModalType = type;
-  openModal(`Archived ${sectionLabel}`, archivedPeopleModalBodyHtml(type), null, { viewOnly: true });
 };
 
 window.deletePerson = function(type, id) {
@@ -1314,7 +1349,6 @@ window.deleteMonth = function(key) {
 
 // ── MODAL ────────────────────────────────────────────────────────────────────
 let _onConfirm = null;
-let _archivedModalType = null;
 
 const overlay     = document.getElementById('overlay');
 const modalTitle  = document.getElementById('modal-title');
@@ -1375,7 +1409,6 @@ function closeModal() {
   overlay.classList.remove('overlay--open');
   document.body.style.overflow = '';
   _onConfirm = null;
-  _archivedModalType = null;
 }
 
 window.openMonthRosterManage = function(mKey, kind) {
@@ -1482,7 +1515,6 @@ setSaveStatusHandler((status, message) => {
 
 // ── INIT (after passcode / session) ───────────────────────────────────────────
 function runAdminInit() {
-  injectArchiveButtonIcons();
   setDataChangeHandler(() => {
     if (!isDataReady()) return;
     invalidateDerivedCache();

@@ -45,7 +45,7 @@
   --people-donor-bg:      var(--accent);
   --people-donor-text:    var(--on-accent);
   --people-recipient-bg:  #f5c518;
-  --people-recipient-text:#1a1400;
+  --people-recipient-text:#0d1117;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -71,7 +71,7 @@
     --shadow-md:    none;
     --shadow-lg:    none;
     --people-recipient-bg:  #e6b800;
-    --people-recipient-text:#ffffff;
+    --people-recipient-text:#0d1117;
   }
 
   .header {
@@ -87,27 +87,6 @@
 
   .field__select {
     background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L6 7L11 1' stroke='%238E8E93' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-  }
-
-  .section-head--recipients .section-head__archive,
-  .section-head--recipients .section-head__add {
-    border-color: rgba(255, 255, 255, 0.35);
-  }
-
-  .section-head--recipients .section-head__archive:hover,
-  .section-head--recipients .section-head__add:hover {
-    background: rgba(255, 255, 255, 0.15);
-    border-color: rgba(255, 255, 255, 0.5);
-  }
-
-  .section-head--recipients .section-head__archive--empty {
-    color: rgba(255, 255, 255, 0.75);
-    border-color: rgba(255, 255, 255, 0.3);
-  }
-
-  .section-head--recipients .section-head__archive--empty:hover {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.15);
   }
 }
 
@@ -495,31 +474,11 @@ body {
   background: var(--accent-sub);
 }
 
-.section-head__archive {
-  margin-left: auto;
-  flex-shrink: 0;
-}
-
-.section-head__archive--empty {
-  color: var(--muted);
-  border-color: var(--border);
-}
-
-.section-head__archive--empty:hover {
-  color: var(--text);
-  border-color: var(--border-strong);
-  background: var(--surface-hover);
-}
-
 .section-head__actions {
   display: flex;
   align-items: center;
   gap: 0.35rem;
   flex-shrink: 0;
-}
-
-.section-head__actions .section-head__archive {
-  margin-left: 0;
 }
 
 .section-head--people {
@@ -543,31 +502,13 @@ body {
   color: var(--people-donor-text);
 }
 
-.section-head--donors .section-head__archive,
 .section-head--donors .section-head__add {
   color: var(--people-donor-text);
-  border-color: rgba(255, 255, 255, 0.35);
 }
 
-.section-head--donors .section-head__archive {
-  background: transparent;
-}
-
-.section-head--donors .section-head__archive:hover,
 .section-head--donors .section-head__add:hover {
   background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.5);
   color: var(--people-donor-text);
-}
-
-.section-head--donors .section-head__archive--empty {
-  color: rgba(255, 255, 255, 0.75);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.section-head--donors .section-head__archive--empty:hover {
-  color: var(--people-donor-text);
-  background: rgba(255, 255, 255, 0.15);
 }
 
 .section-head--recipients {
@@ -578,35 +519,17 @@ body {
   color: var(--people-recipient-text);
 }
 
-.section-head--recipients .section-head__archive,
 .section-head--recipients .section-head__add {
   color: var(--people-recipient-text);
-  border-color: rgba(26, 20, 0, 0.2);
-  background: transparent;
-}
-
-.section-head--recipients .section-head__add {
   border: none;
   font-size: 0.85rem;
   font-weight: 700;
   padding: 0.35rem 0.55rem;
 }
 
-.section-head--recipients .section-head__archive:hover,
 .section-head--recipients .section-head__add:hover {
-  background: rgba(26, 20, 0, 0.08);
-  border-color: rgba(26, 20, 0, 0.3);
+  background: rgba(13, 17, 23, 0.08);
   color: var(--people-recipient-text);
-}
-
-.section-head--recipients .section-head__archive--empty {
-  color: rgba(26, 20, 0, 0.55);
-  border-color: rgba(26, 20, 0, 0.18);
-}
-
-.section-head--recipients .section-head__archive--empty:hover {
-  color: var(--people-recipient-text);
-  background: rgba(26, 20, 0, 0.08);
 }
 
 .section-head--donors .section-head__add {
@@ -730,6 +653,40 @@ input[type="number"],
   border: 1.5px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;
+}
+
+.people-archived-controls {
+  margin: 0;
+}
+
+.list-row--people-archived {
+  border-top: 1.5px solid var(--border);
+  cursor: pointer;
+}
+
+.list-row--people-archived > .list-row__body {
+  min-height: 44px;
+  padding: 0.55rem 0.85rem;
+}
+
+.list-row--people-archived .list-row__name {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+}
+
+.list-row--people-archived .list-row__chevron {
+  color: var(--muted);
+  opacity: 0.85;
+}
+
+.list-row--people-archived:hover {
+  background: var(--surface-hover);
+}
+
+.list-row--people-archived:hover .list-row__name,
+.list-row--people-archived:hover .list-row__chevron {
+  color: var(--muted);
 }
 
 .list-row--people {
