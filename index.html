@@ -41,19 +41,19 @@
 
     <!-- CURRENT MONTH -->
     <div class="month-picker" id="month-picker">
-      <button type="button" class="month-picker__nav" id="month-prev" aria-label="Previous month" disabled>
-        <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
-          <path d="M9 2L4 7L9 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
       <div class="month-picker__pill" id="month-display">
+        <button type="button" class="month-picker__nav" id="month-prev" aria-label="Previous month" disabled>
+          <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M9 2L4 7L9 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
         <span class="month-picker__label" id="month-label">—</span>
+        <button type="button" class="month-picker__nav" id="month-next" aria-label="Next month" disabled>
+          <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M5 2L10 7L5 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
       </div>
-      <button type="button" class="month-picker__nav" id="month-next" aria-label="Next month" disabled>
-        <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
-          <path d="M5 2L10 7L5 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
     </div>
 
     <!-- MAIN REPORT -->
@@ -241,6 +241,9 @@
       reportEl.classList.remove('public-month-enter');
       void reportEl.offsetWidth;
       reportEl.classList.add('public-month-enter');
+      reportEl.addEventListener('animationend', () => {
+        reportEl.style.willChange = 'auto';
+      }, { once: true });
     }
 
     function escHtml(s) {

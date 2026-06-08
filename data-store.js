@@ -8,6 +8,7 @@
   const CACHE_KEY = 'si_remote_cache';
   const CACHE_TTL_MS = 5 * 60 * 1000;
   const SAVE_DEBOUNCE_MS = 1500;
+  const DISK_WRITE_DEBOUNCE_MS = 300;
 
   const SEED = {
     version: SCHEMA_VERSION,
@@ -87,6 +88,10 @@
   let _onDataChange = null;
   let _saveTimer = null;
   let _pendingSaveData = null;
+  let _diskWriteTimer = null;
+  let _revision = 0;
+  let _cacheSavedAt = 0;
+  let _skipNetworkUntil = 0;
 
   const API_DATA_URL = '/api/data';
 
@@ -120,8 +125,23 @@
     return JSON.parse(JSON.stringify(data));
   }
 
-  function dataFingerprint(data) {
-    return JSON.stringify(data);
+  function bumpRevision() {
+    _revision += 1;
+  }
+
+  function getCacheSavedAt() {
+    if (_cacheSavedAt) return _cacheSavedAt;
+    const disk = readLocalCache();
+    return disk?.savedAt || 0;
+  }
+
+  function isNetworkRevalidationFresh() {
+    return Date.now() < _skipNetworkUntil;
+  }
+
+  function markNetworkFresh() {
+    _skipNetworkUntil = Date.now() + CACHE_TTL_MS;
+    _cacheSavedAt = Date.now();
   }
 
   function removeDefaultMonthlyNotes(data) {
@@ -186,13 +206,30 @@
     }
   }
 
-  function writeLocalCache(data) {
+  function writeLocalCacheNow(data) {
     try {
+      const savedAt = Date.now();
       localStorage.setItem(
         CACHE_KEY,
-        JSON.stringify({ data: deepClone(data), savedAt: Date.now() })
+        JSON.stringify({ data: deepClone(data), savedAt })
       );
+      _cacheSavedAt = savedAt;
+      markNetworkFresh();
     } catch { /* ignore quota errors */ }
+  }
+
+  function scheduleWriteLocalCache(data) {
+    clearTimeout(_diskWriteTimer);
+    _diskWriteTimer = setTimeout(() => {
+      _diskWriteTimer = null;
+      if (_cache) writeLocalCacheNow(_cache);
+    }, DISK_WRITE_DEBOUNCE_MS);
+  }
+
+  function flushLocalCache() {
+    clearTimeout(_diskWriteTimer);
+    _diskWriteTimer = null;
+    if (_cache) writeLocalCacheNow(_cache);
   }
 
   function readLegacyLocalStorage() {
@@ -216,12 +253,12 @@
   }
 
   function applyCacheUpdate(data, notify) {
-    const prevFingerprint = _cache ? dataFingerprint(_cache) : null;
+    const changed = !_cache || JSON.stringify(_cache) !== JSON.stringify(data);
     data.version = SCHEMA_VERSION;
     _cache = data;
     _ready = true;
-    writeLocalCache(data);
-    const changed = prevFingerprint !== dataFingerprint(data);
+    if (changed) bumpRevision();
+    writeLocalCacheNow(data);
     if (changed && notify && typeof _onDataChange === 'function') {
       _onDataChange(data);
     }
@@ -235,6 +272,10 @@
     if (data) {
       _cache = data;
       _ready = true;
+      _cacheSavedAt = disk.savedAt;
+      if (isCacheWithinTTL(disk.savedAt)) {
+        _skipNetworkUntil = disk.savedAt + CACHE_TTL_MS;
+      }
     }
   }
 
@@ -304,7 +345,7 @@
     setSaveStatus('saving');
     try {
       await putBinRecord(data, false);
-      writeLocalCache(data);
+      writeLocalCacheNow(data);
       setSaveStatus('saved');
     } catch (err) {
       setSaveStatus('error', err.message);
@@ -312,7 +353,11 @@
     }
   }
 
-  async function revalidateFromNetwork({ silent } = {}) {
+  async function revalidateFromNetwork({ silent, force } = {}) {
+    if (!force && isNetworkRevalidationFresh()) {
+      return _cache;
+    }
+
     let record;
     try {
       record = await fetchBinRecordDeduped();
@@ -361,7 +406,7 @@
       setSaveStatus('saving');
       try {
         await putBinRecord(payload, keepalive);
-        writeLocalCache(payload);
+        writeLocalCacheNow(payload);
         _cache = payload;
         setSaveStatus('saved');
       } catch (err) {
@@ -385,14 +430,16 @@
       if (!_ready || !_cache) {
         return loadData({ background: false });
       }
-      revalidateFromNetwork({ silent: true }).catch(() => {});
+      if (!opts.force && isNetworkRevalidationFresh()) return _cache;
+      revalidateFromNetwork({ silent: true, force: !!opts.force }).catch(() => {});
       return _cache;
     }
 
     _loadError = null;
 
     if (_ready && _cache) {
-      revalidateFromNetwork({ silent: true }).catch(() => {});
+      if (!opts.force && isNetworkRevalidationFresh()) return _cache;
+      revalidateFromNetwork({ silent: true, force: !!opts.force }).catch(() => {});
       return _cache;
     }
 
@@ -402,13 +449,18 @@
       if (data) {
         _cache = data;
         _ready = true;
-        revalidateFromNetwork({ silent: true }).catch(() => {});
+        _cacheSavedAt = disk.savedAt;
+        if (isCacheWithinTTL(disk.savedAt)) {
+          _skipNetworkUntil = disk.savedAt + CACHE_TTL_MS;
+          return _cache;
+        }
+        revalidateFromNetwork({ silent: true, force: !!opts.force }).catch(() => {});
         return _cache;
       }
     }
 
     try {
-      return await revalidateFromNetwork({ silent: false });
+      return await revalidateFromNetwork({ silent: false, force: !!opts.force });
     } catch (err) {
       const diskFallback = readLocalCache();
       if (diskFallback?.data) {
@@ -434,10 +486,20 @@
     data.version = SCHEMA_VERSION;
     _cache = data;
     _ready = true;
-    writeLocalCache(data);
+    bumpRevision();
+    scheduleWriteLocalCache(data);
     _pendingSaveData = data;
     scheduleDebouncedSave();
     return Promise.resolve();
+  }
+
+  function invalidateDataCache() {
+    _skipNetworkUntil = 0;
+    _cacheSavedAt = 0;
+  }
+
+  function getDataRevision() {
+    return _revision;
   }
 
   async function flushPendingSave() {
@@ -449,7 +511,7 @@
     data.version = SCHEMA_VERSION;
     _pendingSaveData = null;
     _cache = data;
-    writeLocalCache(data);
+    flushLocalCache();
 
     if (_putPromise) {
       try {
@@ -460,7 +522,7 @@
     setSaveStatus('saving');
     try {
       await putBinRecord(data, true);
-      writeLocalCache(data);
+      writeLocalCacheNow(data);
       setSaveStatus('saved');
     } catch (err) {
       _pendingSaveData = data;
@@ -472,12 +534,18 @@
   function flushPendingSaveOnUnload() {
     clearTimeout(_saveTimer);
     _saveTimer = null;
-    if (!_pendingSaveData) return;
-    const data = deepClone(_pendingSaveData);
-    data.version = SCHEMA_VERSION;
-    _pendingSaveData = null;
-    writeLocalCache(data);
-    putBinRecord(data, true).catch(() => {});
+    clearTimeout(_diskWriteTimer);
+    _diskWriteTimer = null;
+    if (_pendingSaveData) {
+      const data = deepClone(_pendingSaveData);
+      data.version = SCHEMA_VERSION;
+      _pendingSaveData = null;
+      _cache = data;
+      writeLocalCacheNow(data);
+      putBinRecord(data, true).catch(() => {});
+      return;
+    }
+    flushLocalCache();
   }
 
   function isDataReady() {
@@ -499,6 +567,8 @@
   window.getData = getData;
   window.saveData = saveData;
   window.flushPendingSave = flushPendingSave;
+  window.invalidateDataCache = invalidateDataCache;
+  window.getDataRevision = getDataRevision;
   window.isDataReady = isDataReady;
   window.getLoadError = getLoadError;
   window.setSaveStatusHandler = function (fn) {
